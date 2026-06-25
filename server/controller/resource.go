@@ -17,6 +17,7 @@ package controller
 import (
 	"github.com/fouc3-mirror/RelayOps/pkg/nathole"
 	plugin "github.com/fouc3-mirror/RelayOps/pkg/plugin/server"
+	"github.com/fouc3-mirror/RelayOps/pkg/redis"
 	"github.com/fouc3-mirror/RelayOps/pkg/util/tcpmux"
 	"github.com/fouc3-mirror/RelayOps/pkg/util/vhost"
 	"github.com/fouc3-mirror/RelayOps/server/group"
@@ -61,6 +62,9 @@ type ResourceController struct {
 
 	// All server manager plugin
 	PluginManager *plugin.Manager
+
+	// TrafficBuffer for Redis stream publishing (nil if Redis is not configured)
+	TrafficBuffer *redis.TrafficBuffer
 }
 
 func (rc *ResourceController) Close() error {

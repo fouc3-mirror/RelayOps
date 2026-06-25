@@ -39,6 +39,7 @@ import (
 	"github.com/fouc3-mirror/RelayOps/pkg/nathole"
 	plugin "github.com/fouc3-mirror/RelayOps/pkg/plugin/server"
 	"github.com/fouc3-mirror/RelayOps/pkg/proto/wire"
+	"github.com/fouc3-mirror/RelayOps/pkg/redis"
 	"github.com/fouc3-mirror/RelayOps/pkg/ssh"
 	"github.com/fouc3-mirror/RelayOps/pkg/transport"
 	httppkg "github.com/fouc3-mirror/RelayOps/pkg/util/http"
@@ -170,6 +171,7 @@ func NewService(cfg *v1.ServerConfig) (*Service, error) {
 			VisitorManager: visitor.NewManager(),
 			TCPPortManager: ports.NewManager("tcp", cfg.ProxyBindAddr, cfg.AllowPorts),
 			UDPPortManager: ports.NewManager("udp", cfg.ProxyBindAddr, cfg.AllowPorts),
+			TrafficBuffer:  redis.NewTrafficBuffer(),
 		},
 		sshTunnelListener: netpkg.NewInternalListener(),
 		httpVhostRouter:   vhost.NewRouters(),
@@ -352,6 +354,19 @@ func NewService(cfg *v1.ServerConfig) (*Service, error) {
 		return nil, fmt.Errorf("create nat hole controller error, %v", err)
 	}
 	svr.rc.NatHoleController = nc
+
+	// Init Redis connection if configured.
+	if cfg.Redis != nil {
+		if err := redis.Init(redis.Config{
+			Addr:     cfg.Redis.Addr,
+			Password: cfg.Redis.Password,
+			DB:       cfg.Redis.DB,
+		}); err != nil {
+			return nil, fmt.Errorf("init redis error: %v", err)
+		}
+		log.Infof("redis connected to %s", cfg.Redis.Addr)
+	}
+
 	return svr, nil
 }
 
@@ -359,6 +374,12 @@ func (svr *Service) Run(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	svr.ctx = ctx
 	svr.cancel = cancel
+
+	// Start Redis traffic flush loop if Redis is configured.
+	if redis.Client() != nil {
+		redis.StartFlushLoop(ctx, svr.rc.TrafficBuffer)
+		log.Infof("redis traffic flush loop started")
+	}
 
 	// run dashboard web server.
 	if svr.webServer != nil {
@@ -399,6 +420,8 @@ func (svr *Service) Run(ctx context.Context) {
 }
 
 func (svr *Service) Close() error {
+	redis.Close()
+
 	if svr.kcpListener != nil {
 		svr.kcpListener.Close()
 	}

@@ -322,6 +322,12 @@ func (pxy *BaseProxy) handleUserTCPConnection(userConn net.Conn) {
 	metrics.Server.CloseConnection(name, proxyType)
 	metrics.Server.AddTrafficIn(name, proxyType, inCount)
 	metrics.Server.AddTrafficOut(name, proxyType, outCount)
+
+	// Write traffic delta to Redis buffer if available.
+	if tb := pxy.rc.TrafficBuffer; tb != nil {
+		tb.Add(name, inCount+outCount)
+	}
+
 	xl.Debugf("join connections closed")
 }
 

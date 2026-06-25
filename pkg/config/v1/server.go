@@ -96,6 +96,10 @@ type ServerConfig struct {
 	AllowPorts []types.PortsRange `json:"allowPorts,omitempty"`
 
 	HTTPPlugins []HTTPPluginOptions `json:"httpPlugins,omitempty"`
+
+	// Redis configures an optional Redis connection for streaming traffic
+	// data to external systems.
+	Redis *RedisConfig `json:"redis,omitempty"`
 }
 
 func (c *ServerConfig) Complete() error {
@@ -201,6 +205,13 @@ type TLSServerConfig struct {
 	Force bool `json:"force,omitempty"`
 
 	TLSConfig
+}
+
+// RedisConfig holds Redis connection settings.
+type RedisConfig struct {
+	Addr     string `json:"addr"`
+	Password string `json:"password,omitempty"`
+	DB       int    `json:"db,omitempty"`
 }
 
 type SSHTunnelGateway struct {
