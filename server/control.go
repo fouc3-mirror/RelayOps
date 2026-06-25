@@ -350,6 +350,15 @@ func (ctl *Control) handleNewProxy(m msg.Message) {
 	xl := ctl.xl
 	inMsg := m.(*msg.NewProxy)
 
+	if ctl.sessionCtx.ServerCfg.DisableNewProxy {
+		xl.Warnf("new proxy [%s] rejected: proxy creation is disabled", inMsg.ProxyName)
+		_ = ctl.msgDispatcher.Send(&msg.NewProxyResp{
+			ProxyName: inMsg.ProxyName,
+			Error:     "proxy creation is disabled by server",
+		})
+		return
+	}
+
 	content := &plugin.NewProxyContent{
 		User:     ctl.loginUserInfo(),
 		NewProxy: *inMsg,

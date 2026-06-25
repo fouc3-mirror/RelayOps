@@ -100,6 +100,10 @@ type ServerConfig struct {
 	// Redis configures an optional Redis connection for streaming traffic
 	// data to external systems.
 	Redis *RedisConfig `json:"redis,omitempty"`
+
+	// DisableNewProxy disables client-initiated proxy creation. When true,
+	// clients cannot create new proxies via the NewProxy message.
+	DisableNewProxy bool `json:"disableNewProxy,omitempty"`
 }
 
 func (c *ServerConfig) Complete() error {
