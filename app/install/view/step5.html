@@ -1,0 +1,138 @@
+{extend name="layout"}
+
+{block name="title"}安装中 - RelayOps安装向导{/block}
+
+{block name="content"}
+<div class="install-steps">
+    <div class="step">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 20px; color: #333;">开始安装</h2>
+
+<div id="installContent">
+    <div id="loading" class="loading" style="display: block;">
+        <div class="spinner"></div>
+        <p id="installStatus">正在准备安装...</p>
+    </div>
+
+    <div id="progress" class="progress" style="display: block;">
+        <div class="progress-bar">
+            <div class="progress-bar-fill"></div>
+        </div>
+        <p class="progress-text">准备中...</p>
+    </div>
+</div>
+
+<div id="installResult" style="display: none;">
+    <div class="btn-group" style="justify-content: center;">
+        <a href="{:url('/install/complete')}" class="btn btn-success">安装完成</a>
+    </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+    // 页面加载时自动开始安装
+    document.addEventListener('DOMContentLoaded', function() {
+        startInstall();
+    });
+
+    function startInstall() {
+        // 从 sessionStorage 获取数据
+        var dbHost = sessionStorage.getItem('db_host') || '127.0.0.1';
+        var dbPort = sessionStorage.getItem('db_port') || '3306';
+        var dbName = sessionStorage.getItem('db_name') || '';
+        var dbUser = sessionStorage.getItem('db_user') || '';
+        var dbPass = sessionStorage.getItem('db_pass') || '';
+        var adminUser = sessionStorage.getItem('admin_user') || 'admin';
+        var adminPass = sessionStorage.getItem('admin_pass') || '';
+        var siteName = sessionStorage.getItem('site_name') || 'RelayOps';
+        var siteDescription = sessionStorage.getItem('site_description') || '';
+
+        if (!dbName || !dbUser || !adminPass) {
+            showMessage('error', '安装信息不完整，请返回上一步重新填写');
+            return;
+        }
+
+        updateProgress(10, '正在测试数据库连接...');
+
+        // 创建 FormData
+        var formData = new FormData();
+        formData.append('db_host', dbHost);
+        formData.append('db_port', dbPort);
+        formData.append('db_name', dbName);
+        formData.append('db_user', dbUser);
+        formData.append('db_pass', dbPass);
+        formData.append('admin_user', adminUser);
+        formData.append('admin_pass', adminPass);
+        formData.append('site_name', siteName);
+        formData.append('site_description', siteDescription);
+
+        // 模拟安装进度
+        var progress = 10;
+        var progressInterval = setInterval(function() {
+            if (progress < 90) {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                updateProgress(Math.floor(progress), '正在安装...');
+            }
+        }, 500);
+
+        // 发送安装请求
+        fetch('{:url("/install/install")}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            clearInterval(progressInterval);
+
+            if (data.code === 1) {
+                updateProgress(100, '安装成功！');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('installResult').style.display = 'block';
+
+                // 清除 sessionStorage
+                sessionStorage.removeItem('db_host');
+                sessionStorage.removeItem('db_port');
+                sessionStorage.removeItem('db_name');
+                sessionStorage.removeItem('db_user');
+                sessionStorage.removeItem('db_pass');
+                sessionStorage.removeItem('admin_user');
+                sessionStorage.removeItem('admin_pass');
+                sessionStorage.removeItem('site_name');
+                sessionStorage.removeItem('site_description');
+            } else {
+                updateProgress(0, '安装失败');
+                document.getElementById('loading').style.display = 'none';
+                showMessage('error', data.msg);
+            }
+        })
+        .catch(function(error) {
+            clearInterval(progressInterval);
+            updateProgress(0, '安装失败');
+            document.getElementById('loading').style.display = 'none';
+            showMessage('error', '请求失败：' + error.message);
+        });
+    }
+</script>
+{/block}

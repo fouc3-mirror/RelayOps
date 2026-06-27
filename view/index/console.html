@@ -1,0 +1,89 @@
+{extend name="layout_user"}
+
+{block name="title"}控制台 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="header-title"}控制台{/block}
+
+{block name="style"}
+.console-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.console-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #409eff, #337ecc); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; font-weight: 700; }
+.console-info h2 { font-size: 20px; margin-bottom: 4px; }
+.console-info p { color: #999; font-size: 13px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.stat-card .icon { font-size: 28px; margin-bottom: 12px; }
+.stat-card .label { font-size: 13px; color: #999; margin-bottom: 6px; }
+.stat-card .value { font-size: 24px; font-weight: 600; color: #333; }
+
+.section-card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 20px; }
+.section-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.info-item .label { font-size: 13px; color: #999; margin-bottom: 4px; }
+.info-item .value { font-size: 14px; color: #333; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: #999; }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 14px; }
+{/block}
+
+{block name="content"}
+<div style="max-width: 960px; margin: 0 auto;">
+    <!-- 用户信息头部 -->
+    <div class="console-header">
+        <div class="console-avatar">
+            <?= mb_substr($user['nickname'] ?: $user['username'], 0, 1) ?>
+        </div>
+        <div class="console-info">
+            <h2><?= htmlspecialchars($user['nickname'] ?: $user['username']) ?></h2>
+            <p><?= htmlspecialchars($user['email'] ?: '未绑定邮箱') ?></p>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="icon">🖥️</div>
+            <div class="label">我的节点</div>
+            <div class="value"><?= $nodeCount ?></div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">📅</div>
+            <div class="label">注册时间</div>
+            <div class="value" style="font-size: 16px;"><?= date('Y-m-d', $user['create_time']) ?></div>
+        </div>
+    </div>
+
+    <!-- 账户信息 -->
+    <div class="section-card">
+        <div class="section-title">账户信息</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">用户名</div>
+                <div class="value"><?= htmlspecialchars($user['username']) ?></div>
+            </div>
+            <div class="info-item">
+                <div class="label">昵称</div>
+                <div class="value"><?= htmlspecialchars($user['nickname'] ?: '-') ?></div>
+            </div>
+            <div class="info-item">
+                <div class="label">邮箱</div>
+                <div class="value"><?= htmlspecialchars($user['email'] ?: '未绑定') ?></div>
+            </div>
+            <div class="info-item">
+                <div class="label">状态</div>
+                <div class="value"><?= $user['status'] ? '<span style="color:#67c23a">正常</span>' : '<span style="color:#f56c6c">已禁用</span>' ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 节点列表（占位） -->
+    <div class="section-card">
+        <div class="section-title">我的节点</div>
+        <div class="empty-state">
+            <div class="icon">🖥️</div>
+            <p>暂无节点，等待分配</p>
+        </div>
+    </div>
+</div>
+{/block}
