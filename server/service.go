@@ -124,6 +124,9 @@ type Service struct {
 	// Auth runtime and encryption materials
 	auth *auth.ServerAuth
 
+	// ConnLimiter tracks per-client TCP connection counts
+	connLimiter *redis.ConnLimiter
+
 	tlsConfig *tls.Config
 
 	cfg *v1.ServerConfig
@@ -365,6 +368,11 @@ func NewService(cfg *v1.ServerConfig) (*Service, error) {
 			return nil, fmt.Errorf("init redis error: %v", err)
 		}
 		log.Infof("redis connected to %s", cfg.Redis.Addr)
+	}
+
+	// Init ConnLimiter if Redis is available.
+	if redis.Client() != nil {
+		svr.connLimiter = redis.NewConnLimiter()
 	}
 
 	return svr, nil
@@ -790,11 +798,28 @@ func (svr *Service) RegisterControl(
 		return nil, err
 	}
 
+	// Fetch lease from Redis if configured.
+	var lease *redis.LeaseConfig
+	if redis.Client() != nil && svr.cfg.NodeID != "" {
+		lease, err = redis.FetchLease(ctx, svr.cfg.NodeID, loginMsg.PrivilegeKey)
+		if err != nil {
+			xl.Warnf("redis lease fetch failed: %v", err)
+			return nil, fmt.Errorf("lease authentication failed")
+		}
+		// Set ConnLimiter for this client.
+		if svr.connLimiter != nil && lease.MaxTCP > 0 {
+			svr.connLimiter.SetLimit(loginMsg.RunID, lease.MaxTCP)
+		}
+	}
+
 	ctl, err := NewControl(ctx, &SessionContext{
 		RC:             svr.rc,
 		PxyManager:     svr.pxyManager,
 		PluginManager:  svr.pluginManager,
 		AuthVerifier:   authVerifier,
+		Lease:          lease,
+		ConnLimiter:    svr.connLimiter,
+		NodeID:         svr.cfg.NodeID,
 		EncryptionKey:  svr.auth.EncryptionKey(),
 		Conn:           ctlConn,
 		LoginMsg:       loginMsg,

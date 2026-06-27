@@ -30,6 +30,7 @@ import (
 	pkgerr "github.com/fouc3-mirror/RelayOps/pkg/errors"
 	"github.com/fouc3-mirror/RelayOps/pkg/msg"
 	plugin "github.com/fouc3-mirror/RelayOps/pkg/plugin/server"
+	"github.com/fouc3-mirror/RelayOps/pkg/redis"
 	"github.com/fouc3-mirror/RelayOps/pkg/transport"
 	"github.com/fouc3-mirror/RelayOps/pkg/util/util"
 	"github.com/fouc3-mirror/RelayOps/pkg/util/wait"
@@ -102,6 +103,12 @@ type SessionContext struct {
 	PluginManager *plugin.Manager
 	// verifies authentication based on selected method
 	AuthVerifier auth.Verifier
+	// lease configuration from Redis (nil when Redis is not configured)
+	Lease *redis.LeaseConfig
+	// connLimiter tracks per-client TCP connection counts
+	ConnLimiter *redis.ConnLimiter
+	// nodeID identifies this frps instance in Redis key paths
+	NodeID string
 	// key used for connection encryption
 	EncryptionKey []byte
 	// control connection
@@ -114,6 +121,8 @@ type SessionContext struct {
 	ClientRegistry *registry.ClientRegistry
 	// negotiated wire protocol for this client session
 	WireProtocol string
+	// cancelCtrlWatch stops the Redis control channel watcher
+	cancelCtrlWatch context.CancelFunc
 }
 
 type Control struct {
@@ -168,6 +177,16 @@ func NewControl(ctx context.Context, sessionCtx *SessionContext) (*Control, erro
 		doneCh:       make(chan struct{}),
 	}
 	ctl.lastPing.Store(time.Now())
+
+	// Start Redis control channel watcher if lease is present.
+	if sessionCtx.Lease != nil && sessionCtx.NodeID != "" {
+		ctrlCtx, cancel := context.WithCancel(ctx)
+		sessionCtx.cancelCtrlWatch = cancel
+		go redis.WatchCtrlChannel(ctrlCtx, sessionCtx.NodeID, sessionCtx.Lease.ClientID, func(reason string) {
+			ctl.xl.Warnf("kicked by ctrl channel: %s", reason)
+			ctl.sessionCtx.Conn.Close()
+		})
+	}
 
 	ctl.msgDispatcher = msg.NewDispatcher(sessionCtx.Conn)
 	ctl.registerMsgHandlers()
@@ -318,6 +337,11 @@ func (ctl *Control) worker() {
 	<-ctl.msgDispatcher.Done()
 	ctl.sessionCtx.Conn.Close()
 
+	// Stop Redis ctrl channel watcher.
+	if ctl.sessionCtx.cancelCtrlWatch != nil {
+		ctl.sessionCtx.cancelCtrlWatch()
+	}
+
 	ctl.mu.Lock()
 	close(ctl.workConnCh)
 	for workConn := range ctl.workConnCh {
@@ -329,6 +353,11 @@ func (ctl *Control) worker() {
 
 	for _, pxy := range proxies {
 		ctl.closeProxy(pxy)
+	}
+
+	// Clean up ConnLimiter.
+	if ctl.sessionCtx.ConnLimiter != nil {
+		ctl.sessionCtx.ConnLimiter.Remove(ctl.runID)
 	}
 
 	metrics.Server.CloseClient()
@@ -357,6 +386,21 @@ func (ctl *Control) handleNewProxy(m msg.Message) {
 			Error:     "proxy creation is disabled by server",
 		})
 		return
+	}
+
+	// Check lease-based port restrictions
+	if ctl.sessionCtx.Lease != nil {
+		// Validate port against allowed_ports
+		if inMsg.RemotePort > 0 {
+			if err := ctl.sessionCtx.Lease.ValidatePort(int(inMsg.RemotePort)); err != nil {
+				xl.Warnf("new proxy [%s] rejected: %v", inMsg.ProxyName, err)
+				_ = ctl.msgDispatcher.Send(&msg.NewProxyResp{
+					ProxyName: inMsg.ProxyName,
+					Error:     util.GenerateResponseErrorString("port not allowed by lease", err, lo.FromPtr(ctl.sessionCtx.ServerCfg.DetailedErrorsToClient)),
+				})
+				return
+			}
+		}
 	}
 
 	content := &plugin.NewProxyContent{

@@ -97,9 +97,13 @@ type ServerConfig struct {
 
 	HTTPPlugins []HTTPPluginOptions `json:"httpPlugins,omitempty"`
 
-	// Redis configures an optional Redis connection for streaming traffic
-	// data to external systems.
+	// Redis configures an optional Redis connection for lease-based
+	// authentication, traffic reporting, and control channels.
 	Redis *RedisConfig `json:"redis,omitempty"`
+
+	// NodeID identifies this frps instance for Redis key paths (frp:auth:{nodeID}:...).
+	// Required when Redis is configured.
+	NodeID string `json:"nodeId,omitempty"`
 
 	// DisableNewProxy disables client-initiated proxy creation. When true,
 	// clients cannot create new proxies via the NewProxy message.
