@@ -1,0 +1,413 @@
+<?php /*a:2:{s:59:"D:\frps-tp\RelayOps-php\app\install/view/install\index.html";i:1782529589;s:52:"D:\frps-tp\RelayOps-php\app\install/view/layout.html";i:1782526748;}*/ ?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎安装 - RelayOps安装向导</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .install-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+        }
+
+        .install-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .install-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .install-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .install-body {
+            padding: 30px;
+        }
+
+        .install-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .step.active .step-num {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e0e0e0;
+            margin: 0 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .env-list {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .env-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .env-item:last-child {
+            border-bottom: none;
+        }
+
+        .env-item .name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .env-item .status {
+            font-size: 14px;
+        }
+
+        .env-item .status.ok {
+            color: #28a745;
+        }
+
+        .env-item .status.error {
+            color: #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .complete-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            color: white;
+        }
+
+        .complete-text {
+            text-align: center;
+        }
+
+        .complete-text h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .complete-text p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .complete-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="install-container">
+        <div class="install-header">
+            <h1>ThinkPHP 安装向导</h1>
+            <p>按照步骤完成系统安装</p>
+        </div>
+        <div class="install-body">
+            
+<div class="install-steps">
+    <div class="step active">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<div style="text-align: center; padding: 20px 0;">
+    <h2 style="margin-bottom: 20px; color: #333;">欢迎使用 RelayOps</h2>
+    <p style="color: #666; margin-bottom: 30px;">
+        本向导将引导您完成系统的安装配置。<br>
+        请确保您的服务器环境满足以下要求。
+    </p>
+
+    <div class="env-list">
+        <div class="env-item">
+            <span class="name">PHP版本</span>
+            <span class="status <?php if($php_version >= '8.0'): ?>ok<?php else: ?>error<?php endif; ?>">
+                <?php echo htmlentities((string) $php_version); if($php_version >= '8.0'): ?>✓<?php else: ?>✗ 需要8.0及以上<?php endif; ?>
+            </span>
+        </div>
+        <div class="env-item">
+            <span class="name">PDO扩展</span>
+            <span class="status <?php if(extension_loaded('pdo_mysql')): ?>ok<?php else: ?>error<?php endif; ?>">
+                <?php if(extension_loaded('pdo_mysql')): ?>已安装 ✓<?php else: ?>未安装 ✗<?php endif; ?>
+            </span>
+        </div>
+        <div class="env-item">
+            <span class="name">Mbstring扩展</span>
+            <span class="status <?php if(extension_loaded('mbstring')): ?>ok<?php else: ?>error<?php endif; ?>">
+                <?php if(extension_loaded('mbstring')): ?>已安装 ✓<?php else: ?>未安装 ✗<?php endif; ?>
+            </span>
+        </div>
+    </div>
+
+    <div class="btn-group" style="justify-content: center;">
+        <a href="<?php echo url('/install/step2'); ?>" class="btn btn-primary">开始安装</a>
+    </div>
+</div>
+
+        </div>
+    </div>
+    <script>
+        // 通用JS函数
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showProgress() {
+            document.getElementById('progress').style.display = 'block';
+        }
+
+        function updateProgress(percent, text) {
+            document.querySelector('.progress-bar-fill').style.width = percent + '%';
+            document.querySelector('.progress-text').textContent = text;
+        }
+
+        function showMessage(type, text) {
+            var existing = document.querySelector('.alert');
+            if (existing) {
+                existing.remove();
+            }
+
+            var alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.textContent = text;
+
+            var btnGroup = document.querySelector('.btn-group');
+            if (btnGroup) {
+                btnGroup.parentNode.insertBefore(alertDiv, btnGroup);
+            }
+        }
+    </script>
+    
+</body>
+</html>

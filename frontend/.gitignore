@@ -1,0 +1,36 @@
+# 忽略依赖文件和编译文件
+*.log
+.env
+composer.phar
+composer.lock
+.DS_Store
+Thumbs.db
+
+# 忽略 IDE 和配置文件
+/.idea
+/.vscode
+/.settings
+/.buildpath
+/.project
+/runtimes
+/vendor
+/public/upload
+install.lock
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+*.exe
+*.test
+*.prof
+
+# Self
+bin/
+packages/
+release/
