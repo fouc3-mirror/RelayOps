@@ -1,0 +1,42 @@
+{extend name="layout"}
+
+{block name="title"}安装完成 - RelayOps安装向导{/block}
+
+{block name="content"}
+<div class="install-steps">
+    <div class="step">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<div class="complete-icon">✓</div>
+
+<div class="complete-text">
+    <h2>安装成功！</h2>
+    <p>
+        系统已成功安装并配置完成。<br>
+        请妥善保管您的管理员账号和密码。
+    </p>
+
+    <div class="alert alert-success">
+        为了安全起见，建议您在安装完成后删除 install 目录。
+    </div>
+
+    <div class="complete-links">
+        <a href="/" class="btn btn-primary">访问前台</a>
+        <a href="/admin" class="btn btn-secondary">进入后台</a>
+    </div>
+</div>
+{/block}
