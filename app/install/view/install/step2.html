@@ -1,0 +1,45 @@
+{extend name="layout"}
+
+{block name="title"}环境检测 - RelayOps安装向导{/block}
+
+{block name="content"}
+<div class="install-steps">
+    <div class="step">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 20px; color: #333;">环境检测</h2>
+
+<div class="env-list">
+    {volist name="extensions" id="ext"}
+    <div class="env-item">
+        <span class="name">{$ext.name}</span>
+        <span class="status {if $ext.loaded}ok{else}error{/if}">
+            {if $ext.loaded}已安装 ✓{else}未安装 ✗{/if}
+        </span>
+    </div>
+    {/volist}
+</div>
+
+<div class="alert alert-info">
+    请确保所有必要扩展已安装，否则系统可能无法正常运行。
+</div>
+
+<div class="btn-group">
+    <a href="{:url('/install')}" class="btn btn-secondary">上一步</a>
+    <a href="{:url('/install/step3')}" class="btn btn-primary">下一步</a>
+</div>
+{/block}

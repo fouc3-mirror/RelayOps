@@ -1,0 +1,43 @@
+{extend name="layout_admin"}
+
+{block name="title"}仪表盘 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="header-title"}仪表盘{/block}
+
+{block name="content"}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">节点总数</div>
+        <div class="value">{$nodeCount|default='0'}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">在线节点</div>
+        <div class="value" style="color:#388e3c;">{$onlineCount|default='0'}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">用户总数</div>
+        <div class="value">{$userCount|default='0'}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">订单总数</div>
+        <div class="value">{$orderCount|default='0'}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">本月收入</div>
+        <div class="value" style="color:#f56c6c;">¥{$monthlyIncome|default='0'}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">系统状态</div>
+        <div class="value" style="color:#388e3c; font-size:18px; padding-top:8px;">运行中</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">系统信息</div>
+    <table>
+        <tr><td style="width:160px; color:#888;">系统版本</td><td>{$site.site_name ?? 'RelayOps'} v1.0</td></tr>
+        <tr><td style="color:#888;">ThinkPHP</td><td>v{$tpVersion}</td></tr>
+        <tr><td style="color:#888;">PHP 版本</td><td>{$phpVersion}</td></tr>
+    </table>
+</div>
+{/block}

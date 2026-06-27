@@ -1,0 +1,37 @@
+{extend name="layout"}
+
+{block name="title"}环境错误 - RelayOps安装向导{/block}
+
+{block name="content"}
+<div class="install-steps">
+    <div class="step active">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<div style="text-align: center; padding: 20px 0;">
+    <div style="font-size: 48px; color: #dc3545; margin-bottom: 20px;">⚠️</div>
+    <h2 style="margin-bottom: 20px; color: #333;">环境检测失败</h2>
+    <div class="alert alert-error">
+        {$message}
+    </div>
+    <p style="color: #666; margin-bottom: 30px;">
+        请根据提示修复环境问题后刷新页面重试。
+    </p>
+    <div class="btn-group" style="justify-content: center;">
+        <a href="javascript:location.reload();" class="btn btn-primary">刷新页面</a>
+    </div>
+</div>
+{/block}

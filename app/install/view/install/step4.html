@@ -1,0 +1,87 @@
+{extend name="layout"}
+
+{block name="title"}管理员配置 - RelayOps安装向导{/block}
+
+{block name="content"}
+<div class="install-steps">
+    <div class="step">
+        <div class="step-num">1</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">2</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-num">3</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">4</div>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 20px; color: #333;">管理员配置</h2>
+
+<form id="adminForm">
+    <div class="form-group">
+        <label for="admin_user">管理员账号</label>
+        <input type="text" id="admin_user" name="admin_user" value="admin" required>
+    </div>
+
+    <div class="form-group">
+        <label for="admin_pass">管理员密码</label>
+        <input type="password" id="admin_pass" name="admin_pass" placeholder="请输入管理员密码" required>
+    </div>
+
+    <div class="form-group">
+        <label for="admin_pass_confirm">确认密码</label>
+        <input type="password" id="admin_pass_confirm" placeholder="请再次输入密码" required>
+    </div>
+
+    <div class="alert alert-info">
+        请牢记管理员账号密码，安装完成后将无法修改。
+    </div>
+
+    <div class="btn-group">
+        <a href="{:url('/install/step3')}" class="btn btn-secondary">上一步</a>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">下一步</button>
+    </div>
+</form>
+{/block}
+
+{block name="script"}
+<script>
+    function nextStep() {
+        var adminUser = document.getElementById('admin_user').value;
+        var adminPass = document.getElementById('admin_pass').value;
+        var adminPassConfirm = document.getElementById('admin_pass_confirm').value;
+
+        if (!adminUser) {
+            showMessage('error', '请输入管理员账号');
+            return;
+        }
+
+        if (!adminPass) {
+            showMessage('error', '请输入管理员密码');
+            return;
+        }
+
+        if (adminPass !== adminPassConfirm) {
+            showMessage('error', '两次输入的密码不一致');
+            return;
+        }
+
+        if (adminPass.length < 6) {
+            showMessage('error', '密码长度不能少于6位');
+            return;
+        }
+
+        // 保存数据到 sessionStorage
+        sessionStorage.setItem('admin_user', adminUser);
+        sessionStorage.setItem('admin_pass', adminPass);
+
+        window.location.href = '{:url("/install/step5")}';
+    }
+</script>
+{/block}
