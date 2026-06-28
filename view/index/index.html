@@ -1,0 +1,37 @@
+{extend name="layout_user"}
+
+{block name="title"}{$site.site_name ?? 'RelayOps'} - FRPS 节点管理{/block}
+
+{block name="content"}
+<div style="max-width: 900px; margin: 0 auto; text-align: center; padding: 80px 20px;">
+    <h1 style="font-size: 42px; margin-bottom: 16px; color: #1a1a1a;">⚡ <?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?></h1>
+    <p style="font-size: 18px; color: #666; margin-bottom: 40px;">{$site.site_description ?? '高效管理你的 FRPS 节点，一站式反向代理管理平台'}</p>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px;">
+        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+            <div style="font-size: 36px; margin-bottom: 12px;">🖥️</div>
+            <h3 style="margin-bottom: 8px;">节点管理</h3>
+            <p style="color: #888; font-size: 14px;">集中管理多个 FRPS 节点，实时监控状态</p>
+        </div>
+        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+            <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
+            <h3 style="margin-bottom: 8px;">安全可靠</h3>
+            <p style="color: #888; font-size: 14px;">管理员与用户权限分离，数据安全有保障</p>
+        </div>
+        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+            <div style="font-size: 36px; margin-bottom: 12px;">📊</div>
+            <h3 style="margin-bottom: 8px;">实时监控</h3>
+            <p style="color: #888; font-size: 14px;">节点心跳检测，异常即时告警</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 48px; display: flex; gap: 16px; justify-content: center;">
+        <?php if (session('user_id')): ?>
+            <a href="/console" class="btn btn-primary" style="padding: 12px 36px; font-size: 16px;">进入控制台</a>
+            <a href="/console/shop" class="btn" style="padding: 12px 36px; font-size: 16px; background: #fff; color: #333; border: 1px solid #dcdfe6; border-radius: 6px;">选购商品</a>
+        <?php else: ?>
+            <a href="/login" class="btn btn-primary" style="padding: 12px 36px; font-size: 16px;">立即登录</a>
+        <?php endif; ?>
+    </div>
+</div>
+{/block}

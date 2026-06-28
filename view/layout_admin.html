@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{block name="title"}管理后台 - {$site.site_name ?? 'RelayOps'}{/block}</title>
+    <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #333; }
+        a { text-decoration: none; color: inherit; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* 侧边栏 */
+        .sidebar { width: 220px; background: #1d1e2c; color: #fff; display: flex; flex-direction: column; }
+        .sidebar-logo { padding: 20px 24px; font-size: 18px; font-weight: 700; color: #409eff; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-menu { flex: 1; padding: 12px 0; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 10px; padding: 12px 24px; color: #a0a3bd; font-size: 14px; transition: all .2s; }
+        .sidebar-menu a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .sidebar-menu a.active { background: #409eff; color: #fff; }
+        .sidebar-menu a span.icon { font-size: 18px; width: 24px; text-align: center; }
+
+        /* 主区域 */
+        .content { flex: 1; display: flex; flex-direction: column; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 56px; background: #fff; border-bottom: 1px solid #eee; }
+        .header-title { font-size: 16px; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 16px; font-size: 14px; color: #666; }
+        .header-right a { color: #409eff; }
+        .body { flex: 1; padding: 24px; background: #f0f2f5; }
+
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .card-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        th { color: #888; font-weight: 500; background: #fafafa; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; }
+        .tag-green { background: #e8f5e9; color: #388e3c; }
+        .tag-red { background: #fde8e8; color: #d32f2f; }
+        .tag-gray { background: #f5f5f5; color: #999; }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .stat-card .label { font-size: 13px; color: #999; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 600; color: #333; }
+
+        {block name="style"}{/block}
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?>⚡ <?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?><?php endif; ?></div>
+            <nav class="sidebar-menu">
+                <a href="/admin/dashboard" class="{if $active == 'dashboard'}active{/if}">
+                    <span class="icon">📊</span> 仪表盘
+                </a>
+                <a href="/admin/nodes" class="{if $active == 'nodes'}active{/if}">
+                    <span class="icon">🖥️</span> 节点管理
+                </a>
+                <a href="/admin/products" class="{if $active == 'products'}active{/if}">
+                    <span class="icon">📦</span> 商品管理
+                </a>
+                <a href="/admin/users" class="{if $active == 'users'}active{/if}">
+                    <span class="icon">👥</span> 用户管理
+                </a>
+                <a href="/admin/settings" class="{if $active == 'settings'}active{/if}">
+                    <span class="icon">⚙️</span> 系统设置
+                </a>
+            </nav>
+        </aside>
+
+        <div class="content">
+            <header class="header">
+                <div class="header-title">{block name="header-title"}管理后台{/block}</div>
+                <div class="header-right">
+                    <span><?= session('admin_username') ?: '管理员' ?></span>
+                    <a href="/api/admin/logout" onclick="return confirm('确定退出？')">退出</a>
+                </div>
+            </header>
+
+            <div class="body">
+                {block name="content"}{/block}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

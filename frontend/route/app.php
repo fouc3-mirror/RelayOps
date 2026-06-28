@@ -1,0 +1,130 @@
+<?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
+use think\facade\Route;
+
+// -------------------------------------------------------
+// 安装向导路由
+// -------------------------------------------------------
+Route::group('install', function () {
+    // 安装向导首页
+    Route::get('/', '\app\install\controller\Install::index');
+    // 环境检测
+    Route::get('step2', '\app\install\controller\Install::step2');
+    // 数据库配置
+    Route::get('step3', '\app\install\controller\Install::step3');
+    // 管理员配置
+    Route::get('step4', '\app\install\controller\Install::step4');
+    // 安装过程
+    Route::get('step5', '\app\install\controller\Install::step5');
+    // 安装完成
+    Route::get('complete', '\app\install\controller\Install::complete');
+    // 测试数据库连接
+    Route::post('testDb', '\app\install\controller\Install::testDb');
+    // 执行安装
+    Route::post('install', '\app\install\controller\Install::install');
+})->middleware(\app\install\middleware\CheckInstall::class);
+
+// -------------------------------------------------------
+// API 公开路由（不需要鉴权）
+// -------------------------------------------------------
+Route::group('api', function () {
+    Route::post('user/login', 'api.User/login');
+    Route::post('user/register', 'api.User/register');
+    Route::post('user/verify', 'api.User/sendVerify');
+    Route::post('admin/login', 'api.Admin/login');
+    // 商品列表和详情（公开，不需要登录）
+    Route::get('user/products', 'api.User/products');
+    Route::get('user/product/:id', 'api.User/productDetail');
+    // 支付回调（不需要鉴权，由易支付服务器调用）
+    Route::post('pay/notify', 'api.Pay/notify');
+    Route::get('pay/return', 'api.Pay/returnPage');
+})->middleware(\app\middleware\Cors::class);
+
+// -------------------------------------------------------
+// API 用户鉴权路由
+// -------------------------------------------------------
+Route::group('api/user', function () {
+    Route::get('info', 'api.User/info');
+    Route::get('logout', 'api.User/logout');
+    Route::post('logout', 'api.User/logout');
+    // 节点与端口
+    Route::get('nodes', 'api.User/nodes');
+    Route::get('ports', 'api.User/ports');
+    // 购物车
+    Route::post('cart/add', 'api.User/cartAdd');
+    Route::get('cart', 'api.User/cartList');
+    Route::post('cart/remove', 'api.User/cartRemove');
+    Route::post('cart/clear', 'api.User/cartClear');
+    // 订单
+    Route::post('order/create', 'api.User/orderCreate');
+    Route::post('order/create-direct', 'api.User/orderCreateDirect');
+    Route::get('order/:id/pay', 'api.User/orderPay');
+    Route::get('order/:id', 'api.User/orderDetail');
+    Route::get('orders', 'api.User/orderList');
+})->middleware(\app\middleware\Cors::class)
+  ->middleware(\app\middleware\UserAuth::class);
+
+// -------------------------------------------------------
+// API 管理员鉴权路由
+// -------------------------------------------------------
+Route::group('api/admin', function () {
+    Route::get('info', 'api.Admin/info');
+    Route::post('logout', 'api.Admin/logout');
+    Route::get('nodes', 'api.Admin/nodeList');
+    Route::get('node/detail', 'api.Admin/nodeDetail');
+    Route::post('node/save', 'api.Admin/nodeSave');
+    Route::post('node/delete', 'api.Admin/nodeDelete');
+    Route::post('node/toggle', 'api.Admin/nodeToggle');
+    Route::get('users', 'api.Admin/userList');
+    Route::get('user/detail', 'api.Admin/userDetail');
+    Route::post('user/save', 'api.Admin/userSave');
+    Route::post('user/delete', 'api.Admin/userDelete');
+    Route::post('user/toggle', 'api.Admin/userToggle');
+    Route::get('settings', 'api.Admin/settings');
+    Route::post('settings', 'api.Admin/saveSettings');
+    Route::post('test-email', 'api.Admin/testEmail');
+    // 商品管理
+    Route::get('products', 'api.Admin/productList');
+    Route::post('product/save', 'api.Admin/productSave');
+    Route::post('product/delete', 'api.Admin/productDelete');
+    Route::post('product/toggle', 'api.Admin/productToggle');
+})->middleware(\app\middleware\Cors::class)
+  ->middleware(\app\middleware\AdminAuth::class);
+
+// -------------------------------------------------------
+// 前台页面路由（必须先写子路由再写父路由）
+// -------------------------------------------------------
+Route::get('/', 'Index/index');
+Route::get('login', 'Index/login');
+Route::get('console/shop', 'Index/shop')->middleware(\app\middleware\UserAuth::class);
+Route::get('console', 'Index/console')->middleware(\app\middleware\UserAuth::class);
+Route::get('product/:id', 'Index/product')->middleware(\app\middleware\UserAuth::class);
+
+// -------------------------------------------------------
+// 管理后台路由
+// -------------------------------------------------------
+Route::get('admin/login', 'Admin/login');  // 登录页不需要鉴权
+
+Route::group('admin', function () {
+    Route::get('/', 'Admin/index');
+    Route::get('dashboard', 'Admin/dashboard');
+    Route::get('nodes', 'Admin/nodes');
+    Route::get('products', 'Admin/products');
+    Route::get('users', 'Admin/users');
+    Route::get('settings', 'Admin/settings');
+})->middleware(\app\middleware\AdminAuth::class);
+
+// -------------------------------------------------------
+// 其他路由
+// -------------------------------------------------------
+Route::get('think', fn() => 'hello,ThinkPHP8!');
+
+Route::get('hello/:name', 'index/hello');
