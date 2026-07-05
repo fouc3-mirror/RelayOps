@@ -81,6 +81,103 @@ class Admin extends BaseController
     }
 
     /**
+     * 管理员发送重置密码验证码
+     */
+    public function sendResetVerify(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $username = trim($this->request->param('username', ''));
+
+        if (empty($username)) {
+            return json(['code' => 0, 'msg' => '请输入管理员账号']);
+        }
+
+        // 查找管理员
+        $admin = Db::name('admin')->where('username', $username)->find();
+        if (!$admin) {
+            return json(['code' => 0, 'msg' => '管理员账号不存在']);
+        }
+
+        if (empty($admin['email'])) {
+            return json(['code' => 0, 'msg' => '该账号未设置邮箱，无法重置密码']);
+        }
+
+        $email = $admin['email'];
+
+        // 检查发送频率（60秒内不能重复发送）
+        $lastSend = Db::name('email_verify')
+            ->where('email', $email)
+            ->where('scene', 'admin_reset')
+            ->order('id', 'desc')
+            ->find();
+
+        if ($lastSend && (time() - $lastSend['create_time']) < 60) {
+            $wait = 60 - (time() - $lastSend['create_time']);
+            return json(['code' => 0, 'msg' => "请等待 {$wait} 秒后再试"]);
+        }
+
+        $result = \app\service\Mail::sendVerifyCode($email, 'admin_reset');
+
+        return json($result);
+    }
+
+    /**
+     * 管理员重置密码
+     */
+    public function resetPassword(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $username        = trim($this->request->param('username', ''));
+        $code            = trim($this->request->param('code', ''));
+        $password        = $this->request->param('password', '');
+        $passwordConfirm = $this->request->param('password_confirm', '');
+
+        if (empty($username) || empty($code) || empty($password)) {
+            return json(['code' => 0, 'msg' => '请填写完整信息']);
+        }
+
+        if (strlen($password) < 6) {
+            return json(['code' => 0, 'msg' => '密码至少需要6位']);
+        }
+
+        if ($password !== $passwordConfirm) {
+            return json(['code' => 0, 'msg' => '两次输入的密码不一致']);
+        }
+
+        // 查找管理员
+        $admin = Db::name('admin')->where('username', $username)->find();
+        if (!$admin) {
+            return json(['code' => 0, 'msg' => '管理员账号不存在']);
+        }
+
+        if (empty($admin['email'])) {
+            return json(['code' => 0, 'msg' => '该账号未设置邮箱，无法重置密码']);
+        }
+
+        // 验证邮箱验证码
+        if (!\app\service\Mail::verifyCode($admin['email'], $code, 'admin_reset')) {
+            return json(['code' => 0, 'msg' => '验证码错误或已过期']);
+        }
+
+        // 更新密码
+        $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
+        Db::name('admin')
+            ->where('id', $admin['id'])
+            ->update([
+                'password'    => $newPasswordHash,
+                'update_time' => time(),
+            ]);
+
+        return json(['code' => 1, 'msg' => '密码重置成功，请使用新密码登录']);
+    }
+
+    /**
      * 用户列表
      */
     public function userList(): Response

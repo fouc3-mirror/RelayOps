@@ -35,13 +35,17 @@
         </div>
         <p class="progress-text">准备中...</p>
     </div>
+
+    <div id="installLog" class="install-log" style="display: block;"></div>
 </div>
 
 <div id="installResult" style="display: none;">
     <div class="btn-group" style="justify-content: center;">
-        <a href="{:url('/install/complete')}" class="btn btn-success">安装完成</a>
+        <a id="completeLink" href="{:url('/install/complete')}" class="btn btn-success">进入系统</a>
     </div>
 </div>
+
+<div id="errorDetail" style="display: none;"></div>
 {/block}
 
 {block name="script"}
@@ -60,13 +64,12 @@
         var dbPass = sessionStorage.getItem('db_pass') || '';
         var adminUser = sessionStorage.getItem('admin_user') || 'admin';
         var adminPass = sessionStorage.getItem('admin_pass') || '';
+        var adminEmail = sessionStorage.getItem('admin_email') || '';
 
         if (!dbName || !dbUser || !adminPass) {
             showMessage('error', '安装信息不完整，请返回上一步重新填写');
             return;
         }
-
-        updateProgress(10, '正在测试数据库连接...');
 
         // 创建 FormData
         var formData = new FormData();
@@ -77,18 +80,9 @@
         formData.append('db_pass', dbPass);
         formData.append('admin_user', adminUser);
         formData.append('admin_pass', adminPass);
+        formData.append('admin_email', adminEmail);
 
-        // 模拟安装进度
-        var progress = 10;
-        var progressInterval = setInterval(function() {
-            if (progress < 90) {
-                progress += Math.random() * 10;
-                if (progress > 90) progress = 90;
-                updateProgress(Math.floor(progress), '正在安装...');
-            }
-        }, 500);
-
-        // 发送安装请求
+        // 发送流式安装请求
         fetch('{:url("/install/install")}', {
             method: 'POST',
             body: formData,
@@ -97,36 +91,129 @@
             }
         })
         .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            clearInterval(progressInterval);
-
-            if (data.code === 1) {
-                updateProgress(100, '安装成功！');
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('installResult').style.display = 'block';
-
-                // 清除 sessionStorage
-                sessionStorage.removeItem('db_host');
-                sessionStorage.removeItem('db_port');
-                sessionStorage.removeItem('db_name');
-                sessionStorage.removeItem('db_user');
-                sessionStorage.removeItem('db_pass');
-                sessionStorage.removeItem('admin_user');
-                sessionStorage.removeItem('admin_pass');
-            } else {
-                updateProgress(0, '安装失败');
-                document.getElementById('loading').style.display = 'none';
-                showMessage('error', data.msg);
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
             }
+            // 读取流式响应
+            var reader = response.body.getReader();
+            var decoder = new TextDecoder('utf-8');
+            var buffer = '';
+
+            function processStream() {
+                return reader.read().then(function(result) {
+                    if (result.done) {
+                        return;
+                    }
+
+                    buffer += decoder.decode(result.value, {stream: true});
+                    var lines = buffer.split('\n');
+                    // 最后一行可能不完整，保留到下次处理
+                    buffer = lines.pop();
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i].trim();
+                        if (!line) continue;
+                        try {
+                            var data = JSON.parse(line);
+                            handleProgress(data);
+                        } catch (e) {
+                            console.warn('解析进度数据失败:', line);
+                        }
+                    }
+
+                    return processStream();
+                });
+            }
+
+            return processStream();
         })
         .catch(function(error) {
-            clearInterval(progressInterval);
             updateProgress(0, '安装失败');
             document.getElementById('loading').style.display = 'none';
+            document.querySelector('.spinner').style.display = 'none';
             showMessage('error', '请求失败：' + error.message);
         });
+    }
+
+    function handleProgress(data) {
+        if (data.type === 'progress') {
+            updateProgress(data.progress, data.message);
+            addLogItem(data.message, 'done');
+
+            // 完成时显示结果
+            if (data.step === 'complete') {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('installResult').style.display = 'block';
+                if (data.url) {
+                    document.getElementById('completeLink').href = data.url;
+                }
+                // 清除 sessionStorage
+                var keys = ['db_host', 'db_port', 'db_name', 'db_user', 'db_pass',
+                    'admin_user', 'admin_pass', 'admin_email'];
+                for (var i = 0; i < keys.length; i++) {
+                    sessionStorage.removeItem(keys[i]);
+                }
+            }
+        } else if (data.type === 'error') {
+            updateProgress(0, '安装失败');
+            document.getElementById('loading').style.display = 'none';
+            document.querySelector('.spinner').style.display = 'none';
+            addLogItem('✗ ' + data.message, 'error');
+            showErrorDetail(data);
+        }
+    }
+
+    function addLogItem(message, type) {
+        var log = document.getElementById('installLog');
+        var item = document.createElement('div');
+        item.className = 'log-item ' + (type || '');
+        item.textContent = message;
+        log.appendChild(item);
+        // 自动滚动到底部
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function showErrorDetail(data) {
+        var container = document.getElementById('errorDetail');
+        container.style.display = 'block';
+
+        var html = '<div class="alert alert-error" style="margin-top: 20px;">';
+        html += '<strong>' + data.message + '</strong>';
+        html += '</div>';
+
+        if (data.log && data.log.length > 0) {
+            html += '<div class="error-log-container">';
+            html += '<div class="error-log-header" onclick="toggleErrorLog()">';
+            html += '<span>📋 查看安装日志 (' + data.log.length + ' 条)</span>';
+            html += '<span id="logToggleIcon">▼</span>';
+            html += '</div>';
+            html += '<pre class="error-log" id="errorLogContent">';
+            for (var i = 0; i < data.log.length; i++) {
+                html += escapeHtml(data.log[i]) + '\n';
+            }
+            html += '</pre>';
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function toggleErrorLog() {
+        var log = document.getElementById('errorLogContent');
+        var icon = document.getElementById('logToggleIcon');
+        if (log.style.display === 'none') {
+            log.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            log.style.display = 'none';
+            icon.textContent = '▶';
+        }
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 </script>
 {/block}

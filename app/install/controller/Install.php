@@ -24,6 +24,11 @@ class Install extends BaseController
     protected string $envFile;
 
     /**
+     * 安装日志（内存中累积）
+     */
+    protected array $installLog = [];
+
+    /**
      * 构造方法
      */
     public function __construct(App $app)
@@ -157,7 +162,7 @@ class Install extends BaseController
     }
 
     /**
-     * 执行安装
+     * 执行安装（流式NDJSON输出进度）
      */
     public function install(): Response
     {
@@ -175,21 +180,39 @@ class Install extends BaseController
         $dbName    = $this->request->param('db_name', '');
         $dbUser    = $this->request->param('db_user', '');
         $dbPass    = $this->request->param('db_pass', '');
-        $adminUser = $this->request->param('admin_user', 'admin');
-        $adminPass = $this->request->param('admin_pass', '');
-        $siteName  = $this->request->param('site_name', 'RelayOps');
+        $adminUser  = $this->request->param('admin_user', 'admin');
+        $adminPass  = $this->request->param('admin_pass', '');
+        $adminEmail = $this->request->param('admin_email', '');
+        $siteName   = $this->request->param('site_name', 'RelayOps');
         $siteDescription = $this->request->param('site_description', '');
 
         // 验证参数
-        if (empty($dbName) || empty($dbUser) || empty($adminPass)) {
+        if (empty($dbName) || empty($dbUser) || empty($adminPass) || empty($adminEmail)) {
             return json(['code' => 0, 'msg' => '请填写完整信息']);
+        }
+
+        if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+            return json(['code' => 0, 'msg' => '管理员邮箱格式不正确']);
         }
 
         // 记录安装开始
         $this->log('安装开始 - 数据库: ' . $dbName);
 
+        // 清除输出缓冲，启用流式输出
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // 通过 Response 对象设置响应头（ThinkPHP 8 标准方式）
+        $streamResponse = Response::create('', 'html', 200)->header([
+            'Content-Type'        => 'text/plain; charset=utf-8',
+            'Cache-Control'       => 'no-cache',
+            'X-Accel-Buffering'   => 'no',
+        ]);
+
         try {
             // 1. 连接数据库
+            $this->sendProgress('connecting_db', 10, '正在连接数据库服务器...');
             $dsn = "mysql:host={$dbHost};port={$dbPort};charset=utf8mb4";
             $this->log('连接数据库: ' . $dsn);
             $pdo = new \PDO($dsn, $dbUser, $dbPass, [
@@ -198,13 +221,15 @@ class Install extends BaseController
             ]);
 
             // 2. 创建数据库
+            $this->sendProgress('creating_db', 20, '正在创建数据库...');
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             $pdo->exec("USE `{$dbName}`");
             $this->log('数据库创建/选择成功');
 
-            // 3. 删除已存在的表（用于重新安装）
+            // 3. 清理已存在的表（用于重新安装）
             $tables = $pdo->query("SHOW TABLES LIKE 'RO_%'")->fetchAll(\PDO::FETCH_COLUMN);
             if (!empty($tables)) {
+                $this->sendProgress('cleaning_tables', 30, '正在清理旧数据表...', ['table_count' => count($tables)]);
                 $this->log('发现已存在的表，正在删除: ' . implode(', ', $tables));
                 $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
                 foreach ($tables as $table) {
@@ -214,7 +239,8 @@ class Install extends BaseController
                 $this->log('已删除 ' . count($tables) . ' 个旧表');
             }
 
-            // 4. 读取并执行SQL
+            // 4. 读取并执行SQL文件
+            $this->sendProgress('importing_schema', 40, '正在导入数据库表结构...');
             $sqlFile = app()->getBasePath() . 'install/sql/schema.sql';
             if (file_exists($sqlFile)) {
                 $this->log('读取SQL文件: ' . $sqlFile);
@@ -233,28 +259,29 @@ class Install extends BaseController
                     }
                 }
                 $this->log('SQL执行完成，共执行 ' . $sqlCount . ' 条语句');
+                $this->sendProgress('schema_imported', 50, '数据库表结构导入完成', ['sql_count' => $sqlCount]);
             } else {
                 $this->log('警告: SQL文件不存在: ' . $sqlFile);
             }
 
-            // 5. 插入管理员账号
+            // 5. 创建管理员账号
+            $this->sendProgress('creating_admin', 60, '正在创建管理员账号...');
             $adminPassHash = password_hash($adminPass, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO `RO_admin` (`username`, `password`, `nickname`, `email`, `status`, `create_time`, `update_time`) VALUES (?, ?, ?, ?, 1, ?, ?)");
-            $stmt->execute([$adminUser, $adminPassHash, $adminUser, '', time(), time()]);
+            $stmt->execute([$adminUser, $adminPassHash, $adminUser, $adminEmail, time(), time()]);
             $this->log('管理员账号创建成功: ' . $adminUser);
 
-            // 6. 插入系统设置
+            // 6. 配置系统设置
+            $this->sendProgress('configuring_site', 70, '正在配置系统设置...');
             $time = time();
             $siteNameEscaped = $pdo->quote($siteName);
             $siteDescEscaped = $pdo->quote($siteDescription);
-
-            // 更新系统名称
             $pdo->exec("UPDATE `RO_setting` SET `value` = {$siteNameEscaped}, `update_time` = {$time} WHERE `name` = 'site_name'");
-            // 更新系统描述
             $pdo->exec("UPDATE `RO_setting` SET `value` = {$siteDescEscaped}, `update_time` = {$time} WHERE `name` = 'site_description'");
             $this->log('系统设置已更新: site_name=' . $siteName);
 
-            // 6. 生成.env文件
+            // 7. 生成 .env 配置文件
+            $this->sendProgress('generating_env', 80, '正在生成 .env 配置文件...');
             $envContent  = "APP_DEBUG = false\n\n";
             $envContent .= "DB_TYPE = mysql\n";
             $envContent .= "DB_HOST = {$dbHost}\n";
@@ -272,38 +299,80 @@ class Install extends BaseController
             $envContent .= "REDIS_PREFIX = frp:\n";
 
             if (!file_put_contents($this->envFile, $envContent)) {
-                $this->log('错误: 无法写入.env文件');
-                return json(['code' => 0, 'msg' => '无法写入.env文件，请检查目录权限']);
+                throw new \RuntimeException('无法写入 .env 配置文件，请检查目录权限');
             }
-            $this->log('.env文件写入成功');
+            $this->log('.env 文件写入成功');
 
-            // 7. 创建install.lock
+            // 8. 创建安装锁文件
+            $this->sendProgress('creating_lock', 90, '正在创建安装锁文件...');
             $installInfo = json_encode([
                 'install_time' => date('Y-m-d H:i:s'),
                 'admin_user'   => $adminUser,
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             if (!file_put_contents($this->lockFile, $installInfo)) {
-                $this->log('错误: 无法创建install.lock文件');
-                return json(['code' => 0, 'msg' => '无法创建install.lock文件，请检查目录权限']);
+                throw new \RuntimeException('无法创建 install.lock 文件，请检查目录权限');
             }
-            $this->log('install.lock文件创建成功');
+            $this->log('install.lock 文件创建成功');
 
+            // 安装完成
             $this->log('安装完成!');
-            return json([
-                'code' => 1,
-                'msg'  => '安装成功！',
-                'url'  => url('/install/complete'),
+            $this->sendProgress('complete', 100, '安装完成！', [
+                'url' => (string) url('/install/complete'),
             ]);
 
         } catch (\PDOException $e) {
             $errorMsg = '数据库错误: ' . $e->getMessage();
             $this->log('安装失败 - ' . $errorMsg);
-            return json(['code' => 0, 'msg' => '安装失败：' . $errorMsg]);
+            $this->sendError('安装失败：' . $errorMsg);
+        } catch (\RuntimeException $e) {
+            $this->log('安装失败 - ' . $e->getMessage());
+            $this->sendError($e->getMessage());
         } catch (\Exception $e) {
             $errorMsg = '系统错误: ' . $e->getMessage();
             $this->log('安装失败 - ' . $errorMsg);
-            return json(['code' => 0, 'msg' => '安装失败：' . $errorMsg]);
+            $this->sendError('安装失败：' . $errorMsg);
         }
+
+        // 流式内容已通过 echo/flush 发送，返回响应对象
+        return $streamResponse;
+    }
+
+    /**
+     * 发送流式进度事件 (NDJSON)
+     */
+    private function sendProgress(string $step, int $progress, string $message, array $extra = []): void
+    {
+        $data = array_merge([
+            'type'     => 'progress',
+            'step'     => $step,
+            'progress' => $progress,
+            'message'  => $message,
+        ], $extra);
+        $this->streamLine(json_encode($data, JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * 发送流式错误事件（包含安装日志）
+     */
+    private function sendError(string $message): void
+    {
+        $this->streamLine(json_encode([
+            'type'    => 'error',
+            'message' => $message,
+            'log'     => $this->installLog,
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * 输出一行流式数据
+     */
+    private function streamLine(string $line): void
+    {
+        echo $line . "\n";
+        if (ob_get_level() > 0) {
+            ob_flush();
+        }
+        flush();
     }
 
     /**
@@ -311,6 +380,13 @@ class Install extends BaseController
      */
     protected function log(string $message): void
     {
+        $time = date('Y-m-d H:i:s');
+        $log  = "[{$time}] {$message}";
+
+        // 累积到内存日志（用于错误时返回给前端）
+        $this->installLog[] = $log;
+
+        // 写入文件日志
         $logDir  = app()->getRuntimePath() . 'log/';
         $logFile = $logDir . date('Ym') . '/install_' . date('d') . '.log';
 
@@ -323,9 +399,7 @@ class Install extends BaseController
             mkdir($monthDir, 0755, true);
         }
 
-        $time = date('Y-m-d H:i:s');
-        $log  = "[{$time}] {$message}" . PHP_EOL;
-        file_put_contents($logFile, $log, FILE_APPEND | LOCK_EX);
+        file_put_contents($logFile, $log . PHP_EOL, FILE_APPEND | LOCK_EX);
     }
 
     /**

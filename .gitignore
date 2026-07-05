@@ -12,7 +12,7 @@ Thumbs.db
 /.settings
 /.buildpath
 /.project
-/runtimes
+/runtime
 /vendor
 /public/upload
 install.lock

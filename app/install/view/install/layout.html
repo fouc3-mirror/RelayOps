@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -308,6 +308,97 @@
             display: flex;
             justify-content: center;
             gap: 15px;
+        }
+
+        .install-log {
+            margin-top: 20px;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .log-item {
+            padding: 8px 15px;
+            border-left: 3px solid transparent;
+            font-size: 13px;
+            color: #555;
+            transition: all 0.3s;
+        }
+
+        .log-item.done {
+            border-left-color: #28a745;
+            color: #333;
+        }
+
+        .log-item.done::before {
+            content: '✓ ';
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .log-item.error {
+            border-left-color: #dc3545;
+            color: #721c24;
+            background: #fff5f5;
+            font-weight: 500;
+        }
+
+        .log-item.active {
+            border-left-color: #667eea;
+            color: #333;
+            animation: pulse-border 1.5s ease-in-out infinite;
+        }
+
+        .log-item.active::before {
+            content: '◌ ';
+            color: #667eea;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-left-color: #667eea; }
+            50% { border-left-color: #c3c8f7; }
+        }
+
+        .error-log-container {
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .error-log-header {
+            background: #f8d7da;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #721c24;
+            user-select: none;
+        }
+
+        .error-log-header:hover {
+            background: #f5c6cb;
+        }
+
+        .error-log {
+            display: block;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.6;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
     </style>
 </head>

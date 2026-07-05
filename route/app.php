@@ -40,6 +40,10 @@ Route::group('api', function () {
     Route::post('user/register', 'api.User/register');
     Route::post('user/verify', 'api.User/sendVerify');
     Route::post('admin/login', 'api.Admin/login');
+    // 忘记密码（公开）
+    Route::post('user/reset-password', 'api.User/resetPassword');
+    Route::post('admin/send-reset-verify', 'api.Admin/sendResetVerify');
+    Route::post('admin/reset-password', 'api.Admin/resetPassword');
     // 商品列表和详情（公开，不需要登录）
     Route::get('user/products', 'api.User/products');
     Route::get('user/product/:id', 'api.User/productDetail');

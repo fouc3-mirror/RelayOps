@@ -29,6 +29,14 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '邮箱格式不正确']);
         }
 
+        // 找回密码场景：检查邮箱是否已注册
+        if ($scene === 'reset') {
+            $user = Db::name('user')->where('email', $email)->find();
+            if (!$user) {
+                return json(['code' => 0, 'msg' => '该邮箱未注册']);
+            }
+        }
+
         // 检查发送频率（60秒内不能重复发送）
         $lastSend = Db::name('email_verify')
             ->where('email', $email)
@@ -44,6 +52,59 @@ class User extends BaseController
         $result = \app\service\Mail::sendVerifyCode($email, $scene);
 
         return json($result);
+    }
+
+    /**
+     * 用户重置密码
+     */
+    public function resetPassword(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $email           = trim($this->request->param('email', ''));
+        $code            = trim($this->request->param('code', ''));
+        $password        = $this->request->param('password', '');
+        $passwordConfirm = $this->request->param('password_confirm', '');
+
+        if (empty($email) || empty($code) || empty($password)) {
+            return json(['code' => 0, 'msg' => '请填写完整信息']);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return json(['code' => 0, 'msg' => '邮箱格式不正确']);
+        }
+
+        if (strlen($password) < 6) {
+            return json(['code' => 0, 'msg' => '密码至少需要6位']);
+        }
+
+        if ($password !== $passwordConfirm) {
+            return json(['code' => 0, 'msg' => '两次输入的密码不一致']);
+        }
+
+        // 检查邮箱是否已注册
+        $user = Db::name('user')->where('email', $email)->find();
+        if (!$user) {
+            return json(['code' => 0, 'msg' => '该邮箱未注册']);
+        }
+
+        // 验证邮箱验证码
+        if (!\app\service\Mail::verifyCode($email, $code, 'reset')) {
+            return json(['code' => 0, 'msg' => '验证码错误或已过期']);
+        }
+
+        // 更新密码
+        $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
+        Db::name('user')
+            ->where('id', $user['id'])
+            ->update([
+                'password'    => $newPasswordHash,
+                'update_time' => time(),
+            ]);
+
+        return json(['code' => 1, 'msg' => '密码重置成功，请使用新密码登录']);
     }
 
     /**

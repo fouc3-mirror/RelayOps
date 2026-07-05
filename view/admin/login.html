@@ -21,6 +21,20 @@
         .back-link { text-align: center; margin-top: 20px; }
         .back-link a { color: #999; font-size: 13px; text-decoration: none; }
         .back-link a:hover { color: #409eff; }
+
+        /* 忘记密码 */
+        .forgot-link { text-align: right; margin-bottom: 12px; }
+        .forgot-link a { font-size: 13px; color: #909399; text-decoration: none; }
+        .forgot-link a:hover { color: #409eff; }
+        .forgot-password { display: none; }
+        .forgot-password .fp-title { font-size: 18px; color: #333; margin-bottom: 24px; text-align: center; font-weight: 500; }
+        .fp-step { display: none; }
+        .fp-step.active { display: block; }
+        .verify-group { display: flex; gap: 10px; }
+        .verify-group input { flex: 1; }
+        .verify-btn { padding: 10px 16px; background: #67c23a; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+        .verify-btn:hover { background: #5daf34; }
+        .verify-btn:disabled { background: #a0cfac; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -38,11 +52,170 @@
             </div>
             <button type="submit" class="form-btn">登 录</button>
         </form>
+        <div class="forgot-link"><a href="javascript:void(0)" onclick="showForgotPassword()">忘记密码？</a></div>
         <div class="form-tip" id="msg"></div>
+
+        <!-- 忘记密码 -->
+        <div id="forgotPassword" class="forgot-password">
+            <div class="fp-title">管理员找回密码</div>
+            <!-- Step 1: 输入账号 -->
+            <div id="fpStep1" class="fp-step active">
+                <div class="form-group">
+                    <label>管理员账号</label>
+                    <input type="text" id="fpUsername" placeholder="请输入管理员账号">
+                </div>
+                <button type="button" class="form-btn" id="fpSendBtn" onclick="sendResetCode()">发送验证码</button>
+                <div class="back-link"><a href="javascript:void(0)" onclick="hideForgotPassword()">← 返回登录</a></div>
+            </div>
+            <!-- Step 2: 验证码 + 新密码 -->
+            <div id="fpStep2" class="fp-step">
+                <div class="form-group">
+                    <label>验证码</label>
+                    <div class="verify-group">
+                        <input type="text" id="fpCode" placeholder="请输入验证码" maxlength="6">
+                        <button type="button" class="verify-btn" id="fpResendBtn" onclick="sendResetCode()">重新发送</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" id="fpPassword" placeholder="请输入新密码（至少6位）" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>确认新密码</label>
+                    <input type="password" id="fpPassword2" placeholder="请再次输入新密码">
+                </div>
+                <button type="button" class="form-btn" id="fpResetBtn" onclick="handleResetPassword()">重置密码</button>
+                <div class="form-tip" id="fpMsg"></div>
+                <div class="back-link"><a href="javascript:void(0)" onclick="hideForgotPassword()">← 返回登录</a></div>
+            </div>
+        </div>
+
         <div class="back-link"><a href="/">← 返回首页</a></div>
     </div>
 
     <script>
+    // ==================== 忘记密码 ====================
+    var fpCountdown = 0;
+    var fpTimer = null;
+
+    function showForgotPassword() {
+        document.querySelector('.login-box form').style.display = 'none';
+        document.querySelector('.login-box .forgot-link').style.display = 'none';
+        document.getElementById('msg').textContent = '';
+        document.getElementById('forgotPassword').style.display = 'block';
+        document.getElementById('fpStep1').classList.add('active');
+        document.getElementById('fpStep2').classList.remove('active');
+        document.getElementById('fpMsg').textContent = '';
+        document.getElementById('fpUsername').value = '';
+        document.getElementById('fpCode').value = '';
+        document.getElementById('fpPassword').value = '';
+        document.getElementById('fpPassword2').value = '';
+        // 如果登录表单有用户名，自动填入
+        var loginUsername = document.getElementById('username').value;
+        if (loginUsername) { document.getElementById('fpUsername').value = loginUsername; }
+    }
+
+    function hideForgotPassword() {
+        document.querySelector('.login-box form').style.display = 'block';
+        document.querySelector('.login-box .forgot-link').style.display = 'block';
+        document.getElementById('forgotPassword').style.display = 'none';
+        document.getElementById('msg').textContent = '';
+        if (fpTimer) { clearInterval(fpTimer); fpTimer = null; }
+        fpCountdown = 0;
+    }
+
+    async function sendResetCode() {
+        var username = document.getElementById('fpUsername').value.trim();
+        var btn = document.getElementById('fpSendBtn');
+        var resendBtn = document.getElementById('fpResendBtn');
+        var msg = document.getElementById('fpMsg');
+
+        if (!username) { msg.style.color = '#f56c6c'; msg.textContent = '请输入管理员账号'; return; }
+
+        if (btn) { btn.disabled = true; btn.textContent = '发送中...'; }
+        if (resendBtn) { resendBtn.disabled = true; resendBtn.textContent = '发送中...'; }
+        msg.style.color = '#999'; msg.textContent = '';
+
+        try {
+            var res = await fetch('/api/admin/send-reset-verify', {
+                method: 'POST',
+                body: 'username=' + encodeURIComponent(username),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var json = await res.json();
+            if (json.code === 1) {
+                msg.style.color = '#67c23a';
+                msg.textContent = '验证码已发送至管理员邮箱';
+                document.getElementById('fpStep1').classList.remove('active');
+                document.getElementById('fpStep2').classList.add('active');
+                fpCountdown = 60;
+                var targetBtn = resendBtn || btn;
+                targetBtn.textContent = fpCountdown + '秒后重试';
+                fpTimer = setInterval(function() {
+                    fpCountdown--;
+                    if (fpCountdown <= 0) {
+                        clearInterval(fpTimer); fpTimer = null;
+                        targetBtn.disabled = false;
+                        targetBtn.textContent = resendBtn ? '重新发送' : '发送验证码';
+                        if (btn) { btn.disabled = false; btn.textContent = '发送验证码'; }
+                    } else {
+                        targetBtn.textContent = fpCountdown + '秒后重试';
+                        if (btn) btn.textContent = fpCountdown + '秒后重试';
+                    }
+                }, 1000);
+            } else {
+                msg.style.color = '#f56c6c';
+                msg.textContent = json.msg || '发送失败';
+                if (btn) { btn.disabled = false; btn.textContent = '发送验证码'; }
+                if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = '重新发送'; }
+            }
+        } catch(err) {
+            msg.style.color = '#f56c6c'; msg.textContent = '网络错误，请重试';
+            if (btn) { btn.disabled = false; btn.textContent = '发送验证码'; }
+            if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = '重新发送'; }
+        }
+    }
+
+    async function handleResetPassword() {
+        var username = document.getElementById('fpUsername').value.trim();
+        var code = document.getElementById('fpCode').value;
+        var password = document.getElementById('fpPassword').value;
+        var password2 = document.getElementById('fpPassword2').value;
+        var btn = document.getElementById('fpResetBtn');
+        var msg = document.getElementById('fpMsg');
+
+        if (!code) { msg.style.color = '#f56c6c'; msg.textContent = '请输入验证码'; return; }
+        if (password.length < 6) { msg.style.color = '#f56c6c'; msg.textContent = '密码至少需要6位'; return; }
+        if (password !== password2) { msg.style.color = '#f56c6c'; msg.textContent = '两次输入的密码不一致'; return; }
+
+        btn.disabled = true; btn.textContent = '重置中...';
+        msg.style.color = '#999'; msg.textContent = '';
+
+        try {
+            var res = await fetch('/api/admin/reset-password', {
+                method: 'POST',
+                body: 'username=' + encodeURIComponent(username) +
+                      '&code=' + encodeURIComponent(code) +
+                      '&password=' + encodeURIComponent(password) +
+                      '&password_confirm=' + encodeURIComponent(password2),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var json = await res.json();
+            if (json.code === 1) {
+                msg.style.color = '#67c23a';
+                msg.textContent = '密码重置成功，即将跳转...';
+                setTimeout(function() { hideForgotPassword(); }, 1500);
+            } else {
+                msg.style.color = '#f56c6c';
+                msg.textContent = json.msg || '重置失败';
+            }
+        } catch(err) {
+            msg.style.color = '#f56c6c'; msg.textContent = '网络错误，请重试';
+        } finally {
+            btn.disabled = false; btn.textContent = '重置密码';
+        }
+    }
+
     async function handleLogin(e) {
         e.preventDefault();
         var msg = document.getElementById('msg');
