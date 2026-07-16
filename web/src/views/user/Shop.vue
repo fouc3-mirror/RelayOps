@@ -3,7 +3,7 @@
     <el-page-header @back="$router.push('/console')" title="返回控制台" content="购买端口" style="margin-bottom:24px;" />
 
     <div v-if="products.length === 0 && !loading" style="text-align:center;padding:80px;color:#999;">
-      <div style="font-size:48px;margin-bottom:16px;">📦</div>
+      <div style="font-size:48px;margin-bottom:16px;"></div>
       <p>暂无在售商品</p>
     </div>
 
@@ -15,7 +15,7 @@
             <h3>{{ product.name }}</h3>
             <el-tag size="small" :type="proxyTagType(product.proxy_type)">{{ product.proxy_type.toUpperCase() }}</el-tag>
           </div>
-          <div class="product-node">🖥️ {{ product.node_name }}</div>
+          <div class="product-node">{{ product.node_name }}</div>
           <div class="product-ports">
             端口范围：<span style="font-family:monospace;">{{ product.port_start }}-{{ product.port_end }}</span>
           </div>
@@ -71,7 +71,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.shop { max-width: 1100px; margin: 0 auto; }
+.shop { max-width: 1100px; margin: 0 auto; padding: 32px 40px; }
 .product-card { height: 100%; }
 .product-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .product-header h3 { font-size: 16px; margin: 0; }

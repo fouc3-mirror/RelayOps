@@ -7,12 +7,12 @@
 {/block}
 
 {block name="content"}
-<div style="max-width: 700px; margin: 0 auto;">
+<div style="max-width: 700px; margin: 0 auto; padding: 32px 40px;">
     <a href="/console" style="color: #409eff; font-size: 14px;">← 返回控制台</a>
 
     <div id="detailCard" style="margin-top: 20px; background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
         <div style="text-align:center; padding:40px; color:#999;">
-            <div style="font-size:48px; margin-bottom:16px;">⏳</div>
+            <div style="font-size:48px; margin-bottom:16px;"></div>
             <p>加载中...</p>
         </div>
     </div>
@@ -27,7 +27,7 @@ fetch('/api/user/client/detail?id=' + id, { headers: { 'X-Requested-With': 'XMLH
         if (res.code !== 1 || !res.data) {
             document.getElementById('detailCard').innerHTML =
                 '<div style="text-align:center; padding:60px; color:#999;">' +
-                    '<div style="font-size:48px; margin-bottom:16px;">❌</div>' +
+                    '<div style="font-size:48px; margin-bottom:16px;"></div>' +
                     '<p>' + (res.msg || '产品不存在') + '</p>' +
                     '<a href="/console" style="color:#409eff; margin-top:16px; display:inline-block;">返回控制台</a>' +
                 '</div>';

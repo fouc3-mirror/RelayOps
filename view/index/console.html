@@ -12,7 +12,7 @@
 {/block}
 
 {block name="content"}
-<div style="max-width: 960px; margin: 0 auto;">
+<div style="max-width: 960px; margin: 0 auto; padding: 32px 40px;">
     <!-- 用户信息头部 -->
     <div class="console-header">
         <div class="console-avatar">
@@ -27,17 +27,17 @@
     <!-- 统计卡片 -->
     <div class="stat-grid">
         <div class="stat-card">
-            <div class="icon">📦</div>
+            <div class="icon"></div>
             <div class="label">我的产品</div>
             <div class="value"><?= $productCount ?? 0 ?></div>
         </div>
         <div class="stat-card">
-            <div class="icon">✅</div>
+            <div class="icon"></div>
             <div class="label">运行中</div>
             <div class="value" style="color:#67c23a;"><?= $activeCount ?? 0 ?></div>
         </div>
         <div class="stat-card">
-            <div class="icon">📅</div>
+            <div class="icon"></div>
             <div class="label">注册时间</div>
             <div class="value" style="font-size: 16px;"><?= date('Y-m-d', $user['create_time']) ?></div>
         </div>
@@ -119,7 +119,7 @@
         </table>
         <?php else: ?>
         <div class="empty-state">
-            <div class="icon">📦</div>
+            <div class="icon"></div>
             <p>暂无产品，<a href="/console/shop" style="color:#409eff;">去购买</a></p>
         </div>
         <?php endif; ?>

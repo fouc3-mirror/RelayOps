@@ -51,25 +51,25 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?>⚡ <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></div>
+            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></div>
             <nav class="sidebar-menu">
                 <a href="/admin/dashboard" class="{if $active == 'dashboard'}active{/if}">
-                    <span class="icon">📊</span> 仪表盘
+                    <span class="icon"></span> 仪表盘
                 </a>
                 <a href="/admin/nodes" class="{if $active == 'nodes'}active{/if}">
-                    <span class="icon">🖥️</span> 节点管理
+                    <span class="icon"></span> 节点管理
                 </a>
                 <a href="/admin/products" class="{if $active == 'products'}active{/if}">
-                    <span class="icon">📦</span> 商品管理
+                    <span class="icon"></span> 商品管理
                 </a>
                 <a href="/admin/users" class="{if $active == 'users'}active{/if}">
-                    <span class="icon">👥</span> 用户管理
+                    <span class="icon"></span> 用户管理
                 </a>
                 <a href="/admin/orders" class="{if $active == 'orders'}active{/if}">
-                    <span class="icon">📋</span> 订单管理
+                    <span class="icon"></span> 订单管理
                 </a>
                 <a href="/admin/settings" class="{if $active == 'settings'}active{/if}">
-                    <span class="icon">⚙️</span> 系统设置
+                    <span class="icon"></span> 系统设置
                 </a>
             </nav>
         </aside>

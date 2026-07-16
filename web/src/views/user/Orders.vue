@@ -37,13 +37,13 @@
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
             <el-button v-if="row.status === 0" type="primary" link @click="handlePay(row)">去支付</el-button>
-            <span v-else-if="row.status === 1" style="color:#67c23a;font-size:13px;">✓</span>
+            <span v-else-if="row.status === 1" style="color:#67c23a;font-size:13px;"></span>
           </template>
         </el-table-column>
       </el-table>
 
       <div v-if="!loading && orders.length === 0" style="text-align:center;padding:60px;color:#999;">
-        <div style="font-size:48px;margin-bottom:16px;">📦</div>
+        <div style="font-size:48px;margin-bottom:16px;"></div>
         <p>暂无订单</p>
         <el-button type="primary" @click="$router.push('/console/shop')">去选购</el-button>
       </div>
@@ -96,5 +96,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.orders-page { max-width: 960px; margin: 0 auto; }
+.orders-page { max-width: 960px; margin: 0 auto; padding: 32px 40px; }
 </style>

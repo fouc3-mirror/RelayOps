@@ -7,11 +7,11 @@
 {/block}
 
 {block name="content"}
-<div class="product-detail-page">
+<div class="product-detail-page" style="padding:32px 40px;">
     <a href="/console/shop" class="back-link">← 返回商品列表</a>
 
     <div id="productDetail" class="product-detail-card">
-        <div class="loading-placeholder"><div class="icon">⏳</div><p>加载中...</p></div>
+        <div class="loading-placeholder"><div class="icon"></div><p>加载中...</p></div>
     </div>
 </div>
 
@@ -22,7 +22,7 @@ fetch('/api/user/product/' + productId, { headers: { 'X-Requested-With': 'XMLHtt
     .then(function(r) { return r.json(); })
     .then(function(res) {
         if (res.code !== 1 || !res.data) {
-            document.getElementById('productDetail').innerHTML = '<div style="text-align:center;padding:60px;color:#999;"><div style="font-size:48px;margin-bottom:16px;">❌</div><p>' + (res.msg || '商品不存在') + '</p><a href="/console/shop" style="color:#409eff;margin-top:16px;display:inline-block;">返回商品列表</a></div>';
+            document.getElementById('productDetail').innerHTML = '<div style="text-align:center;padding:60px;color:#999;"><div style="font-size:48px;margin-bottom:16px;"></div><p>' + (res.msg || '商品不存在') + '</p><a href="/console/shop" style="color:#409eff;margin-top:16px;display:inline-block;">返回商品列表</a></div>';
             return;
         }
         var p = res.data;
@@ -115,7 +115,7 @@ function checkPort() {
 
     // 校验端口范围
     if (port < p.port_start || port > p.port_end) {
-        portStatus.textContent = '✗';
+        portStatus.textContent = '';
         portStatus.style.color = '#f56c6c';
         portMsg.textContent = '端口范围：' + p.port_start + '-' + p.port_end;
         portMsg.style.color = '#f56c6c';
@@ -123,7 +123,7 @@ function checkPort() {
         return;
     }
 
-    portStatus.textContent = '⏳';
+    portStatus.textContent = '';
     portStatus.style.color = '#999';
     portMsg.textContent = '检测中...';
     portMsg.style.color = '#999';
@@ -138,13 +138,13 @@ function checkPort() {
         .then(function(res) {
             if (res.code === 1 && res.data && res.data.occupied_ports) {
                 if (res.data.occupied_ports.indexOf(port) !== -1) {
-                    portStatus.textContent = '✗ 已被占用';
+                    portStatus.textContent = ' 已被占用';
                     portStatus.style.color = '#f56c6c';
                     portMsg.textContent = '该端口已被其他用户购买';
                     portMsg.style.color = '#f56c6c';
                     portInput.style.borderColor = '#f56c6c';
                 } else {
-                    portStatus.textContent = '✓ 可用';
+                    portStatus.textContent = ' 可用';
                     portStatus.style.color = '#67c23a';
                     portMsg.textContent = '';
                     portInput.style.borderColor = '#67c23a';

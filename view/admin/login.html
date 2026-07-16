@@ -7,18 +7,18 @@
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1d1e2c 0%, #2c3e6b 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        .login-box { width: 400px; background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .login-box h2 { text-align: center; margin-bottom: 8px; font-size: 22px; color: #1d1e2c; }
-        .login-box .sub { text-align: center; margin-bottom: 30px; font-size: 14px; color: #999; }
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1d1e2c 0%, #2c3e6b 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 20px; }
+        .login-wrapper { width: 420px; background: #fff; border-radius: 14px; padding: 44px 40px; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
+        .login-wrapper h2 { text-align: center; margin-bottom: 6px; font-size: 22px; color: #1d1e2c; }
+        .login-wrapper .sub { text-align: center; margin-bottom: 32px; font-size: 14px; color: #999; }
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #555; }
-        .form-group input { width: 100%; padding: 10px 14px; border: 1px solid #dcdfe6; border-radius: 6px; font-size: 14px; outline: none; transition: border .2s; }
-        .form-group input:focus { border-color: #409eff; }
-        .form-btn { width: 100%; padding: 12px; background: #409eff; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background .2s; }
-        .form-btn:hover { background: #337ecc; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #555; font-weight: 500; }
+        .form-group input { width: 100%; padding: 11px 14px; border: 1px solid #dcdfe6; border-radius: 6px; font-size: 14px; outline: none; transition: border .2s; }
+        .form-group input:focus { border-color: #409eff; box-shadow: 0 0 0 3px rgba(64,158,255,0.12); }
+        .form-btn { width: 100%; padding: 12px; background: #409eff; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; transition: all .2s; font-weight: 500; }
+        .form-btn:hover { background: #337ecc; box-shadow: 0 4px 14px rgba(64,158,255,0.35); transform: translateY(-1px); }
         .form-tip { text-align: center; margin-top: 16px; font-size: 13px; min-height: 20px; }
-        .back-link { text-align: center; margin-top: 20px; }
+        .back-link { text-align: center; margin-top: 24px; }
         .back-link a { color: #999; font-size: 13px; text-decoration: none; }
         .back-link a:hover { color: #409eff; }
 
@@ -38,13 +38,13 @@
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php else: ?>⚡<?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h2>
+    <div class="login-wrapper">
+        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h2>
         <div class="sub">管理员登录</div>
         <form onsubmit="return handleLogin(event)">
             <div class="form-group">
                 <label>管理员账号</label>
-                <input type="text" id="username" placeholder="请输入账号" required autofocus>
+                <input type="text" id="username" placeholder="请输入管理员账号" required autofocus>
             </div>
             <div class="form-group">
                 <label>密码</label>
@@ -58,7 +58,6 @@
         <!-- 忘记密码 -->
         <div id="forgotPassword" class="forgot-password">
             <div class="fp-title">管理员找回密码</div>
-            <!-- Step 1: 输入账号 -->
             <div id="fpStep1" class="fp-step active">
                 <div class="form-group">
                     <label>管理员账号</label>
@@ -67,7 +66,6 @@
                 <button type="button" class="form-btn" id="fpSendBtn" onclick="sendResetCode()">发送验证码</button>
                 <div class="back-link"><a href="javascript:void(0)" onclick="hideForgotPassword()">← 返回登录</a></div>
             </div>
-            <!-- Step 2: 验证码 + 新密码 -->
             <div id="fpStep2" class="fp-step">
                 <div class="form-group">
                     <label>验证码</label>
@@ -94,13 +92,12 @@
     </div>
 
     <script>
-    // ==================== 忘记密码 ====================
     var fpCountdown = 0;
     var fpTimer = null;
 
     function showForgotPassword() {
-        document.querySelector('.login-box form').style.display = 'none';
-        document.querySelector('.login-box .forgot-link').style.display = 'none';
+        document.querySelector('.login-wrapper form').style.display = 'none';
+        document.querySelector('.login-wrapper .forgot-link').style.display = 'none';
         document.getElementById('msg').textContent = '';
         document.getElementById('forgotPassword').style.display = 'block';
         document.getElementById('fpStep1').classList.add('active');
@@ -110,14 +107,13 @@
         document.getElementById('fpCode').value = '';
         document.getElementById('fpPassword').value = '';
         document.getElementById('fpPassword2').value = '';
-        // 如果登录表单有用户名，自动填入
         var loginUsername = document.getElementById('username').value;
         if (loginUsername) { document.getElementById('fpUsername').value = loginUsername; }
     }
 
     function hideForgotPassword() {
-        document.querySelector('.login-box form').style.display = 'block';
-        document.querySelector('.login-box .forgot-link').style.display = 'block';
+        document.querySelector('.login-wrapper form').style.display = 'block';
+        document.querySelector('.login-wrapper .forgot-link').style.display = 'block';
         document.getElementById('forgotPassword').style.display = 'none';
         document.getElementById('msg').textContent = '';
         if (fpTimer) { clearInterval(fpTimer); fpTimer = null; }

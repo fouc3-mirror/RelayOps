@@ -11,7 +11,7 @@
       </template>
 
       <div v-if="cartStore.count === 0" style="text-align:center;padding:60px;color:#999;">
-        <div style="font-size:48px;margin-bottom:16px;">🛒</div>
+        <div style="font-size:48px;margin-bottom:16px;"></div>
         <p>购物车是空的</p>
         <el-button type="primary" @click="$router.push('/console/shop')">去选购</el-button>
       </div>
@@ -125,5 +125,5 @@ async function handleCheckout() {
 </script>
 
 <style scoped>
-.cart-page { max-width: 960px; margin: 0 auto; }
+.cart-page { max-width: 960px; margin: 0 auto; padding: 32px 40px; }
 </style>

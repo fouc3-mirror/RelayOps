@@ -14,7 +14,7 @@
       <el-col :span="6">
         <el-card shadow="never">
           <div style="text-align:center;">
-            <div style="font-size:28px;margin-bottom:8px;">🖥️</div>
+            <div style="font-size:28px;margin-bottom:8px;"></div>
             <div style="color:#999;font-size:13px;">我的端口</div>
             <div style="font-size:24px;font-weight:600;">{{ portCount }}</div>
           </div>
@@ -23,7 +23,7 @@
       <el-col :span="6">
         <el-card shadow="never">
           <div style="text-align:center;">
-            <div style="font-size:28px;margin-bottom:8px;">🛒</div>
+            <div style="font-size:28px;margin-bottom:8px;"></div>
             <div style="color:#999;font-size:13px;">购物车</div>
             <div style="font-size:24px;font-weight:600;">{{ cartStore.count }}</div>
           </div>
@@ -32,7 +32,7 @@
       <el-col :span="6">
         <el-card shadow="never">
           <div style="text-align:center;">
-            <div style="font-size:28px;margin-bottom:8px;">📦</div>
+            <div style="font-size:28px;margin-bottom:8px;"></div>
             <div style="color:#999;font-size:13px;">有效订单</div>
             <div style="font-size:24px;font-weight:600;">{{ orderCount }}</div>
           </div>
@@ -41,7 +41,7 @@
       <el-col :span="6">
         <el-card shadow="never">
           <div style="text-align:center;">
-            <div style="font-size:28px;margin-bottom:8px;">📅</div>
+            <div style="font-size:28px;margin-bottom:8px;"></div>
             <div style="color:#999;font-size:13px;">注册时间</div>
             <div style="font-size:16px;">{{ regDate }}</div>
           </div>
@@ -110,6 +110,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.console { max-width: 960px; margin: 0 auto; }
+.console { max-width: 960px; margin: 0 auto; padding: 32px 40px; }
 .console-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 </style>

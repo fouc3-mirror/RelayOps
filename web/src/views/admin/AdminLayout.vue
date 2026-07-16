@@ -1,0 +1,41 @@
+<template>
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="sidebar-logo">管理后台</div>
+            <nav class="sidebar-menu">
+                <router-link to="/admin/dashboard">仪表盘</router-link>
+                <a href="javascript:;" style="color:#a0a3bd;">节点管理</a>
+                <a href="javascript:;" style="color:#a0a3bd;">商品管理</a>
+                <a href="javascript:;" style="color:#a0a3bd;">用户管理</a>
+                <a href="javascript:;" style="color:#a0a3bd;">订单管理</a>
+                <a href="javascript:;" style="color:#a0a3bd;">系统设置</a>
+            </nav>
+        </aside>
+        <div class="admin-main">
+            <header class="admin-header">
+                <span>管理后台</span>
+                <div>
+                    <span style="margin-right:16px;color:#666;">管理员</span>
+                    <router-link to="/admin/login">退出</router-link>
+                </div>
+            </header>
+            <div class="admin-body">
+                <router-view />
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+.admin-layout { display: flex; min-height: 100vh; }
+.admin-sidebar { width: 220px; background: #1d1e2c; color: #fff; display: flex; flex-direction: column; }
+.sidebar-logo { padding: 20px 24px; font-size: 18px; font-weight: 700; color: #409eff; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-menu { flex: 1; padding: 12px 0; }
+.sidebar-menu a { display: flex; align-items: center; gap: 10px; padding: 12px 24px; color: #a0a3bd; font-size: 14px; text-decoration: none; transition: all .2s; }
+.sidebar-menu a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.sidebar-menu a.router-link-exact-active { background: #409eff; color: #fff; }
+.admin-main { flex: 1; display: flex; flex-direction: column; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 56px; background: #fff; border-bottom: 1px solid #eee; }
+.admin-header a { color: #409eff; text-decoration: none; }
+.admin-body { flex: 1; padding: 24px; background: #f0f2f5; }
+</style>

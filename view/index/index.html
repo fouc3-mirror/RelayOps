@@ -1,106 +1,217 @@
 {extend name="layout_user"}
 
-{block name="title"}{$site.site_name ?? '雨梦FRPS业务管理系统'} - FRPS 节点管理{/block}
+{block name="title"}{$site.site_name ?? '雨梦FRPS业务管理系统'} - 企业级 FRPS 节点管理{/block}
 
 {block name="head"}
 <link rel="stylesheet" href="/themes/web.css">
 {/block}
 
 {block name="content"}
-<div style="padding: 40px 20px;">
-    <!-- Banner -->
-    <div class="banner" id="banner">
-        <div class="banner-content">
-            <h1 id="bannerTitle"><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h1>
-            <p id="bannerDesc">{$site.site_description ?? '高效管理你的 FRPS 节点，一站式反向代理管理平台'}</p>
-            <div class="cta-buttons">
+<!-- Hero Banner: 全宽 -->
+<section class="hero" id="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-inner">
+        <div class="hero-text">
+            <div class="hero-eyebrow"> 企业级 FRPS 节点管理平台</div>
+            <h1><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h1>
+            <p>{$site.site_description ?? '高性能反向代理节点集中管控，多节点智能调度、实时流量监控、安全鉴权分离——让您的 FRPS 基础设施安全、稳定、高效运行'}</p>
+            <div class="hero-actions">
                 <?php if (session('user_id')): ?>
                     <a href="/console" class="btn btn-primary">进入控制台</a>
-                    <a href="/console/shop" class="btn" style="background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);">选购商品</a>
+                    <a href="/console/shop" class="btn btn-ghost">选购商品</a>
                 <?php else: ?>
-                    <a href="/login" class="btn btn-primary">立即登录</a>
+                    <a href="/login" class="btn btn-primary">立即开始使用</a>
+                    <a href="/about" class="btn btn-ghost">了解更多</a>
                 <?php endif; ?>
             </div>
         </div>
-        <div class="banner-slides" id="bannerDots">
-            <div class="dot active" data-index="0"></div>
-            <div class="dot" data-index="1"></div>
-            <div class="dot" data-index="2"></div>
+        <div class="hero-stats">
+            <div class="hero-stat-card">
+                <div class="num blue" id="statNodes">--</div>
+                <div class="lbl">全球节点</div>
+            </div>
+            <div class="hero-stat-card">
+                <div class="num green" id="statClients">--</div>
+                <div class="lbl">活跃隧道</div>
+            </div>
+            <div class="hero-stat-card">
+                <div class="num orange" id="statUptime">99.9%</div>
+                <div class="lbl">系统可用率</div>
+            </div>
         </div>
     </div>
+    <div class="hero-scroll-hint">
+        <span>向下滚动</span>
+        <div class="arrow"></div>
+    </div>
+</section>
 
-    <!-- 功能特色 -->
-    <div class="home-section">
+<!-- 统计条带 -->
+<section class="stats-strip">
+    <div class="stats-strip-inner">
+        <div class="stat-item"><div class="val c1" id="stripNodes">--</div><div class="desc">运行节点</div></div>
+        <div class="stat-item"><div class="val c2" id="stripClients">--</div><div class="desc">活跃隧道</div></div>
+        <div class="stat-item"><div class="val c3" id="stripUsers">--</div><div class="desc">注册用户</div></div>
+        <div class="stat-item"><div class="val c4">99.9%</div><div class="desc">系统可用率</div></div>
+    </div>
+</section>
+
+<!-- 功能特色 -->
+<section class="section" id="features">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>为什么选择我们</h2>
+            <p>从节点部署到流量监控，提供全链路 FRPS 管理解决方案</p>
+        </div>
         <div class="feature-grid">
             <div class="feature-card">
-                <div class="icon">🖥️</div>
-                <h3>节点管理</h3>
-                <p>集中管理多个 FRPS 节点，实时监控运行状态，一键启停</p>
+                <div class="icon-wrap blue">🖥️</div>
+                <h3>多节点集中管控</h3>
+                <p>统一面板管理分布在全球的 FRPS 节点，支持一键启用/禁用，实时查看节点心跳与在线状态</p>
             </div>
             <div class="feature-card">
-                <div class="icon">🔒</div>
-                <h3>安全可靠</h3>
-                <p>管理员与用户权限分离，数据安全有保障</p>
+                <div class="icon-wrap green">📊</div>
+                <h3>实时流量监控</h3>
+                <p>分钟级流量采集与上报，精确追踪每个隧道的入站/出站带宽，异常流量自动触发告警</p>
             </div>
             <div class="feature-card">
-                <div class="icon">📊</div>
-                <h3>实时监控</h3>
-                <p>节点心跳检测，异常即时告警</p>
+                <div class="icon-wrap orange">🔒</div>
+                <h3>安全鉴权分离</h3>
+                <p>管理员与用户权限完全隔离，节点通信采用独立 Bearer Token 认证体系，数据安全有保障</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-wrap purple">🛒</div>
+                <h3>自动化销售流程</h3>
+                <p>在线选购 → 下单支付 → 自动开通隧道，全流程自动化，支持易支付多通道收款</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-wrap teal">⚙️</div>
+                <h3>灵活端口管理</h3>
+                <p>自定义端口范围分配，Http 分布式锁防并发抢占，数据库唯一索引双重保障端口正确性</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-wrap pink">📧</div>
+                <h3>企业级通知体系</h3>
+                <p>手机号/SMTP 邮件验证码注册/找回密码，订单状态变更实时通知，到期提醒自动发送</p>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- 产品展示 -->
+<section class="section section-gray" id="products">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>热门隧道产品</h2>
+            <p>覆盖 TCP / UDP / HTTP / HTTPS 全协议栈，适配各种业务场景</p>
+        </div>
+        <div class="product-row" id="productShowcase">
+            <div class="product-panel product-placeholder">
+                <div class="loading-placeholder" style="text-align:center;padding:48px;color:#999;">
+                    <div style="font-size:40px;margin-bottom:12px;"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 使用流程 -->
+<section class="section" id="how">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>三步开始使用</h2>
+            <p>简单高效，快速接入 FRPS 节点管理</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <h4>注册账户</h4>
+                <p>邮箱验证注册，安全可靠，即开即用</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <h4>选购商品</h4>
+                <p>浏览隧道产品，选择心仪的端口与时长，加入购物车</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <h4>在线支付</h4>
+                <p>支持支付宝 / 微信 / QQ 钱包扫码支付，即时到账</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <h4>即刻使用</h4>
+                <p>支付成功自动开通隧道，控制台查看连接信息，即刻上线</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+    <div class="section-container">
+        <div class="cta-block">
+            <h2>准备好管理您的 FRPS 节点了吗？</h2>
+            <p>立即注册，体验企业级节点管理平台带来的效率提升</p>
+            <?php if (session('user_id')): ?>
+                <a href="/console" class="btn btn-white">进入控制台</a>
+            <?php else: ?>
+                <a href="/login" class="btn btn-white">免费注册</a>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
 
 <script>
-// Banner 轮播
-var bannerImages = [
-    '<?= $site["site_banner_1"] ?? "" ?>',
-    '<?= $site["site_banner_2"] ?? "" ?>',
-    '<?= $site["site_banner_3"] ?? "" ?>',
-];
+// 加载实时统计数据
+fetch('/api/user/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code === 1 && res.data) {
+            var count = res.data.length;
+            document.getElementById('statNodes').textContent = count;
+            document.getElementById('stripNodes').textContent = count;
+        }
+    })
+    .catch(function() {});
 
-var bannerData = [
-    { title: '⚡ <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>', desc: '<?= htmlspecialchars($site['site_description'] ?? "高效管理你的 FRPS 节点，一站式反向代理管理平台") ?>' },
-    { title: '🚀 快速部署', desc: '5 分钟完成 FRPS 节点接入，无需复杂配置，开箱即用' },
-    { title: '🌐 全球加速', desc: '多节点智能调度，让你的服务始终在线，快速响应' },
-];
+// 加载上架商品
+fetch('/api/user/products', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code === 1 && res.data) {
+            // 统计
+            var productCount = res.data.length;
+            document.getElementById('statClients').textContent = '--';
+            document.getElementById('stripClients').textContent = '--';
+            document.getElementById('stripUsers').textContent = '--';
 
-var bannerIndex = 0;
-var bannerTimer = null;
-
-function switchBanner(index) {
-    bannerIndex = index;
-    document.getElementById('bannerTitle').textContent = bannerData[index].title;
-    document.getElementById('bannerDesc').textContent = bannerData[index].desc;
-    // 有自定义图片时覆盖背景
-    var banner = document.getElementById('banner');
-    if (bannerImages[index]) {
-        banner.style.background = 'url(' + bannerImages[index] + ') center/cover no-repeat';
-    } else {
-        banner.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
-    }
-    document.querySelectorAll('#bannerDots .dot').forEach(function(dot, i) {
-        dot.classList.toggle('active', i === index);
-    });
-}
-
-function startBanner() {
-    bannerTimer = setInterval(function() {
-        var next = (bannerIndex + 1) % bannerData.length;
-        switchBanner(next);
-    }, 4000);
-}
-
-// 点击圆点切换
-document.querySelectorAll('#bannerDots .dot').forEach(function(dot) {
-    dot.addEventListener('click', function() {
-        var idx = parseInt(this.getAttribute('data-index'));
-        switchBanner(idx);
-        clearInterval(bannerTimer);
-        startBanner();
-    });
-});
-
-startBanner();
+            // 渲染热门产品（最多 6 个）
+            var products = res.data.slice(0, 6);
+            if (products.length > 0) {
+                var typeColors = {tcp:'#409eff', udp:'#e6a23c', http:'#67c23a', https:'#f56c6c'};
+                var html = products.map(function(p) {
+                    return '<div class="product-panel">' +
+                        '<div class="product-panel-top">' +
+                            '<span class="ptype ' + p.proxy_type + '">' + p.proxy_type.toUpperCase() + '</span>' +
+                            '<h4>' + p.name + '</h4>' +
+                            '<div class="sub">' + p.node_name + '</div>' +
+                            '<div class="specs">' +
+                                '<div class="spec">端口 <strong>' + p.port_start + '-' + p.port_end + '</strong></div>' +
+                                '<div class="spec">可选时长 <strong>' + (p.durations || ['1']).join('/') + ' 月</strong></div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="price-bar">' +
+                            '<div class="price">¥' + parseFloat(p.price).toFixed(2) + ' <small>/ 月</small></div>' +
+                            '<a href="/product/' + p.id + '" class="buy-btn">立即订购</a>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                document.getElementById('productShowcase').innerHTML = html;
+            }
+        }
+    })
+    .catch(function() {});
 </script>
 {/block}

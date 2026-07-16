@@ -7,14 +7,14 @@
 {/block}
 
 {block name="content"}
-<div class="shop-page">
+<div class="shop-page" style="padding:32px 40px;">
     <div class="shop-header">
         <h2>购买隧道节点</h2>
         <a href="/console" class="back-link">← 返回控制台</a>
     </div>
 
     <div id="productList" class="product-grid">
-        <div class="loading-placeholder"><div class="icon">⏳</div><p>加载中...</p></div>
+        <div class="loading-placeholder"><div class="icon"></div><p>加载中...</p></div>
     </div>
 </div>
 
@@ -23,7 +23,7 @@ fetch('/api/user/products', { headers: { 'X-Requested-With': 'XMLHttpRequest' } 
     .then(function(r) { return r.json(); })
     .then(function(res) {
         if (res.code !== 1 || !res.data || !res.data.length) {
-            document.getElementById('productList').innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>暂无在售商品</p></div>';
+            document.getElementById('productList').innerHTML = '<div class="empty-state"><div class="icon"></div><p>暂无在售商品</p></div>';
             return;
         }
         var html = res.data.map(function(p) {
@@ -33,7 +33,7 @@ fetch('/api/user/products', { headers: { 'X-Requested-With': 'XMLHttpRequest' } 
                     '<h3>' + p.name + '</h3>' +
                     '<span class="tag" style="background:' + tagColor + ';">' + p.proxy_type.toUpperCase() + '</span>' +
                 '</div>' +
-                '<div class="meta">🖥️ ' + p.node_name + '</div>' +
+                '<div class="meta">' + p.node_name + '</div>' +
                 '<div class="port-range">端口范围：<span>' + p.port_start + '-' + p.port_end + '</span></div>' +
                 '<div class="price">¥<strong>' + parseFloat(p.price).toFixed(2) + '</strong>/月</div>' +
                 (p.description ? '<div class="desc">' + p.description + '</div>' : '') +

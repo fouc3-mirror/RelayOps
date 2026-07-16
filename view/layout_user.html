@@ -8,29 +8,33 @@
     {block name="head"}{/block}
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #333; background: #f5f7fa; }
         a { text-decoration: none; color: inherit; }
-        .nav { display: flex; align-items: center; padding: 0 32px; height: 60px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-        .nav-logo { display: flex; align-items: center; gap: 32px; }
-        .nav-logo a.logo-text { font-size: 20px; font-weight: 700; color: #409eff; }
-        .nav-links { display: flex; align-items: center; gap: 24px; }
-        .nav-links a { color: #666; font-size: 15px; transition: color .2s; white-space: nowrap; }
+        .nav { display: flex; align-items: center; padding: 0 40px; height: 64px; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+        .nav-logo { display: flex; align-items: center; gap: 36px; }
+        .nav-logo a.logo-text { font-size: 22px; font-weight: 700; color: #409eff; display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; align-items: center; gap: 28px; }
+        .nav-links a { color: #555; font-size: 15px; font-weight: 500; transition: color .2s; white-space: nowrap; }
         .nav-links a:hover { color: #409eff; }
-        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-        .btn { display: inline-block; padding: 8px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all .2s; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+        .btn { display: inline-block; padding: 9px 22px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all .2s; font-weight: 500; }
         .btn-primary { background: #409eff; color: #fff; }
-        .btn-primary:hover { background: #337ecc; }
+        .btn-primary:hover { background: #337ecc; box-shadow: 0 2px 8px rgba(64,158,255,0.35); }
         .btn-outline { background: transparent; color: #409eff; border: 1px solid #409eff; }
         .btn-outline:hover { background: #ecf5ff; }
-        .main { min-height: calc(100vh - 120px); padding: 40px 32px; background: #f5f7fa; }
-        .footer { text-align: center; padding: 20px; color: #999; font-size: 13px; border-top: 1px solid #eee; background: #fff; }
+        .btn-white { background: #fff; color: #409eff; }
+        .btn-white:hover { background: #ecf5ff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-ghost { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.22); }
+        .main { min-height: calc(100vh - 64px - 52px); }
+        .footer { text-align: center; padding: 16px; color: #999; font-size: 13px; border-top: 1px solid #e8e8e8; background: #fff; }
         {block name="style"}{/block}
     </style>
 </head>
 <body>
     <nav class="nav">
         <div class="nav-logo">
-            <a href="/" class="logo-text"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 32px; vertical-align: middle;"><?php else: ?>⚡ <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></a>
+            <a href="/" class="logo-text"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 32px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></a>
             <div class="nav-links">
                 <a href="/">首页</a>
                 <a href="/about">关于我们</a>
@@ -42,7 +46,7 @@
         </div>
         <div class="nav-right">
             <?php if (session('user_id')): ?>
-                <a href="/console/cart" class="btn btn-outline" style="font-size: 13px; padding: 6px 16px;">🛒 订购产品</a>
+                <a href="/console/cart" class="btn btn-outline" style="font-size: 13px; padding: 6px 16px;">订购产品</a>
                 <a href="/console" style="color: #409eff; font-size: 14px;">
                     <?= htmlspecialchars(session('user_username') ?: '控制台') ?>
                 </a>
