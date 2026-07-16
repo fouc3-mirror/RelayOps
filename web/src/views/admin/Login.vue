@@ -1,7 +1,7 @@
 <template>
     <div class="login-container">
         <div class="login-card">
-            <h2>RelayOps 管理后台</h2>
+            <h2>雨梦FRPS业务管理系统 管理后台</h2>
             <el-form :model="form" @submit.prevent="handleLogin" label-width="0">
                 <el-form-item>
                     <el-input v-model="form.username" placeholder="管理员账号" prefix-icon="User" size="large" />

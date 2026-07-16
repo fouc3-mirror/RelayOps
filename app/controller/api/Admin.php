@@ -373,13 +373,29 @@ class Admin extends BaseController
      */
     public function nodeList(): Response
     {
+        // 检测 domain 列是否存在（兼容旧数据库）
+        static $hasDomain = null;
+        if ($hasDomain === null) {
+            try {
+                Db::name('node')->where('id', 0)->value('domain');
+                $hasDomain = true;
+            } catch (\Throwable $e) {
+                $hasDomain = false;
+            }
+        }
+
+        $fields = 'id,name,server_addr,server_port,dashboard_port,status,last_heartbeat';
+        if ($hasDomain) {
+            $fields .= ',domain';
+        }
+
         $list = Db::name('node')
-            ->field('id,name,server_addr,server_port,dashboard_port,status,last_heartbeat')
+            ->field($fields)
             ->order('id asc')
             ->select()
             ->toArray();
 
-        return json(['code' => 1, 'data' => ['list' => $list]]);
+        return json(['code' => 1, 'data' => $list]);
     }
 
     /**
@@ -423,6 +439,7 @@ class Admin extends BaseController
         $dashboardPass = trim($this->request->param('dashboard_pass', ''));
         $portRangeStart = (int) $this->request->param('port_range_start', 0);
         $portRangeEnd = (int) $this->request->param('port_range_end', 0);
+        $domain = trim($this->request->param('domain', ''));
         $status = (int) $this->request->param('status', 1);
         $description = $this->request->param('description', '');
 
@@ -469,21 +486,35 @@ class Admin extends BaseController
 
         $time = time();
         $saveData = [
-            'name'            => $name,
-            'server_addr'     => $serverAddr,
-            'server_port'     => $serverPort,
-            'auth_token'      => $authToken,
-            'http_port'       => $httpPort,
-            'https_port'      => $httpsPort,
-            'dashboard_port'  => $dashboardPort,
-            'dashboard_user'  => $dashboardUser,
-            'dashboard_pass'  => $dashboardPass,
+            'name'             => $name,
+            'server_addr'      => $serverAddr,
+            'server_port'      => $serverPort,
+            'auth_token'       => $authToken,
+            'http_port'        => $httpPort,
+            'https_port'       => $httpsPort,
+            'dashboard_port'   => $dashboardPort,
+            'dashboard_user'   => $dashboardUser,
+            'dashboard_pass'   => $dashboardPass,
             'port_range_start' => $portRangeStart,
-            'port_range_end'  => $portRangeEnd,
-            'status'          => $status,
-            'description'     => $description,
-            'update_time'     => $time,
+            'port_range_end'   => $portRangeEnd,
+            'status'           => $status,
+            'description'      => $description,
+            'update_time'      => $time,
         ];
+
+        // domain 列兼容：列存在时才写入
+        static $hasDomain = null;
+        if ($hasDomain === null) {
+            try {
+                Db::name('node')->where('id', 0)->value('domain');
+                $hasDomain = true;
+            } catch (\Throwable $e) {
+                $hasDomain = false;
+            }
+        }
+        if ($hasDomain) {
+            $saveData['domain'] = $domain;
+        }
 
         if ($id > 0) {
             // 编辑
@@ -625,6 +656,40 @@ class Admin extends BaseController
     }
 
     /**
+     * 测试支付（1元）
+     */
+    public function testPay(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $payType = $this->request->post('pay_type', 'alipay');
+
+        // 生成测试订单号
+        $orderNo = 'test_' . date('YmdHis') . '_' . mt_rand(1000, 9999);
+
+        $result = \app\service\EpayService::createPayment(
+            $orderNo,
+            1.00,
+            '雨梦FRPS业务管理系统 支付测试（1元）',
+            $payType
+        );
+
+        if (!$result['ok']) {
+            return json(['code' => 0, 'msg' => $result['msg']]);
+        }
+
+        return json([
+            'code' => 0,
+            'msg'  => 'success',
+            'data' => [
+                'url' => $result['url'],
+            ],
+        ]);
+    }
+
+    /**
      * 测试发送邮件
      */
     public function testEmail(): Response
@@ -654,7 +719,7 @@ class Admin extends BaseController
         $list = Db::name('product')
             ->alias('p')
             ->join('node n', 'p.node_id = n.id', 'left')
-            ->field('p.*, n.name as node_name, n.server_addr')
+            ->field('p.id, p.name, p.node_id, p.proxy_type, p.port_start, p.port_end, p.price, p.duration_options, p.status, p.sort, p.traffic_limit, p.description, n.name as node_name, n.server_addr')
             ->order('p.sort asc, p.id desc')
             ->select()
             ->toArray();
@@ -682,6 +747,18 @@ class Admin extends BaseController
         $status = (int) $this->request->param('status', 1);
         $sort = (int) $this->request->param('sort', 0);
         $description = $this->request->param('description', '');
+        $trafficLimit = (int) $this->request->param('traffic_limit', 0);
+
+        // 检查 traffic_limit 列是否存在
+        static $hasTrafficLimit = null;
+        if ($hasTrafficLimit === null) {
+            try {
+                Db::name('product')->whereRaw('1=0')->value('traffic_limit');
+                $hasTrafficLimit = true;
+            } catch (\Throwable $e) {
+                $hasTrafficLimit = false;
+            }
+        }
 
         // 参数校验
         if (empty($name)) {
@@ -741,6 +818,10 @@ class Admin extends BaseController
             'update_time'      => time(),
         ];
 
+        if ($hasTrafficLimit) {
+            $saveData['traffic_limit'] = $trafficLimit * 1024 * 1024 * 1024;
+        }
+
         if ($id > 0) {
             Db::name('product')->where('id', $id)->update($saveData);
         } else {
@@ -788,5 +869,157 @@ class Admin extends BaseController
         Db::name('product')->where('id', $id)->update(['status' => $newStatus, 'update_time' => time()]);
 
         return json(['code' => 1, 'msg' => $newStatus == 1 ? '已上架' : '已下架']);
+    }
+
+    // ========================================================
+    // 订单管理
+    // ========================================================
+
+    /**
+     * 订单列表
+     */
+    public function orderList(): Response
+    {
+        $status = $this->request->param('status', '');
+
+        $query = Db::name('order')
+            ->alias('o')
+            ->leftJoin('user u', 'o.user_id = u.id')
+            ->field('o.*, u.username, u.nickname')
+            ->order('o.id', 'desc');
+
+        if ($status !== '') {
+            $query->where('o.status', (int) $status);
+        }
+
+        $list = $query->select()->toArray();
+
+        // 格式化时间
+        foreach ($list as &$item) {
+            $item['create_time'] = $item['create_time'] ? date('Y-m-d H:i', $item['create_time']) : '-';
+        }
+
+        return json(['code' => 1, 'data' => $list]);
+    }
+
+    /**
+     * 手动创建订单
+     */
+    public function orderSave(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $userId    = (int) $this->request->param('user_id', 0);
+        $nodeId    = (int) $this->request->param('node_id', 0);
+        $proxyType = $this->request->param('proxy_type', 'tcp');
+        $port      = (int) $this->request->param('port', 0);
+        $duration  = (int) $this->request->param('duration', 1);
+        $amount    = (float) $this->request->param('amount', 0);
+        $status    = (int) $this->request->param('status', 0);
+
+        if ($userId <= 0 || $nodeId <= 0 || $port <= 0 || $amount <= 0) {
+            return json(['code' => 0, 'msg' => '请填写完整信息']);
+        }
+
+        // 校验用户
+        $user = Db::name('user')->where('id', $userId)->find();
+        if (!$user) {
+            return json(['code' => 0, 'msg' => '用户不存在']);
+        }
+
+        // 校验节点
+        $node = Db::name('node')->where('id', $nodeId)->find();
+        if (!$node) {
+            return json(['code' => 0, 'msg' => '节点不存在']);
+        }
+
+        // 校验端口是否被占用
+        $check = \app\service\OrderService::verifyPort($nodeId, $port);
+        if (!$check['ok']) {
+            return json(['code' => 0, 'msg' => $check['msg']]);
+        }
+
+        // 生成订单号
+        $orderNo = 'ADMIN' . date('YmdHis') . str_pad((string) mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+
+        $time = time();
+
+        // 创建订单
+        $orderId = Db::name('order')->insertGetId([
+            'order_no'    => $orderNo,
+            'user_id'     => $userId,
+            'node_id'     => $nodeId,
+            'node_name'   => $node['name'] ?? '',
+            'port'        => $port,
+            'proxy_type'  => $proxyType,
+            'duration'    => $duration,
+            'amount'      => $amount,
+            'status'      => $status,
+            'pay_time'    => $status === 1 ? $time : null,
+            'create_time' => $time,
+            'update_time' => $time,
+        ]);
+
+        // 已支付则直接激活服务
+        if ($status === 1 && $orderId) {
+            try {
+                \app\service\OrderService::activateService($orderId, $orderNo);
+            } catch (\Throwable $e) {
+                // 激活失败不影响订单创建
+            }
+        }
+
+        return json(['code' => 1, 'msg' => '订单创建成功']);
+    }
+
+    /**
+     * 手动标记订单为已支付
+     */
+    public function orderPay(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $id = (int) $this->request->param('id', 0);
+
+        $order = Db::name('order')->where('id', $id)->find();
+        if (!$order) {
+            return json(['code' => 0, 'msg' => '订单不存在']);
+        }
+
+        if ($order['status'] != 0) {
+            return json(['code' => 0, 'msg' => '订单状态不允许修改']);
+        }
+
+        try {
+            \app\service\OrderService::activateService($id, $order['order_no']);
+            return json(['code' => 1, 'msg' => '订单已标记支付并激活服务']);
+        } catch (\Throwable $e) {
+            return json(['code' => 0, 'msg' => '操作失败：' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 删除订单
+     */
+    public function orderDelete(): Response
+    {
+        if (!$this->request->isPost()) {
+            return json(['code' => 0, 'msg' => '请求方式错误']);
+        }
+
+        $id = (int) $this->request->param('id', 0);
+
+        $order = Db::name('order')->where('id', $id)->find();
+        if (!$order) {
+            return json(['code' => 0, 'msg' => '订单不存在']);
+        }
+
+        Db::name('order')->where('id', $id)->delete();
+
+        return json(['code' => 1, 'msg' => '订单已删除']);
     }
 }

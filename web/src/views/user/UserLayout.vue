@@ -2,7 +2,7 @@
     <div class="user-layout">
         <header class="user-header">
             <div class="header-left">
-                <router-link to="/" class="logo">RelayOps</router-link>
+                <router-link to="/" class="logo">雨梦FRPS业务管理系统</router-link>
             </div>
             <nav class="header-nav">
                 <router-link to="/">首页</router-link>
@@ -27,7 +27,7 @@
             <router-view />
         </main>
         <footer class="user-footer">
-            <p>Copyright &copy; RelayOps</p>
+            <p>Copyright &copy; 雨梦FRPS业务管理系统</p>
         </footer>
     </div>
 </template>

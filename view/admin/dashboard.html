@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}仪表盘 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="title"}仪表盘 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
 {block name="header-title"}仪表盘{/block}
 
 {block name="content"}
@@ -35,7 +35,7 @@
 <div class="card">
     <div class="card-title">系统信息</div>
     <table>
-        <tr><td style="width:160px; color:#888;">系统版本</td><td>{$site.site_name ?? 'RelayOps'} v1.0</td></tr>
+        <tr><td style="width:160px; color:#888;">系统版本</td><td>{$site.site_name ?? '雨梦FRPS业务管理系统'} v1.0</td></tr>
         <tr><td style="color:#888;">ThinkPHP</td><td>v{$tpVersion}</td></tr>
         <tr><td style="color:#888;">PHP 版本</td><td>{$phpVersion}</td></tr>
     </table>

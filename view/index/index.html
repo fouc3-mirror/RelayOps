@@ -1,37 +1,106 @@
 {extend name="layout_user"}
 
-{block name="title"}{$site.site_name ?? 'RelayOps'} - FRPS 节点管理{/block}
+{block name="title"}{$site.site_name ?? '雨梦FRPS业务管理系统'} - FRPS 节点管理{/block}
+
+{block name="head"}
+<link rel="stylesheet" href="/themes/web.css">
+{/block}
 
 {block name="content"}
-<div style="max-width: 900px; margin: 0 auto; text-align: center; padding: 80px 20px;">
-    <h1 style="font-size: 42px; margin-bottom: 16px; color: #1a1a1a;">⚡ <?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?></h1>
-    <p style="font-size: 18px; color: #666; margin-bottom: 40px;">{$site.site_description ?? '高效管理你的 FRPS 节点，一站式反向代理管理平台'}</p>
-
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px;">
-        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-            <div style="font-size: 36px; margin-bottom: 12px;">🖥️</div>
-            <h3 style="margin-bottom: 8px;">节点管理</h3>
-            <p style="color: #888; font-size: 14px;">集中管理多个 FRPS 节点，实时监控状态</p>
+<div style="padding: 40px 20px;">
+    <!-- Banner -->
+    <div class="banner" id="banner">
+        <div class="banner-content">
+            <h1 id="bannerTitle"><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h1>
+            <p id="bannerDesc">{$site.site_description ?? '高效管理你的 FRPS 节点，一站式反向代理管理平台'}</p>
+            <div class="cta-buttons">
+                <?php if (session('user_id')): ?>
+                    <a href="/console" class="btn btn-primary">进入控制台</a>
+                    <a href="/console/shop" class="btn" style="background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);">选购商品</a>
+                <?php else: ?>
+                    <a href="/login" class="btn btn-primary">立即登录</a>
+                <?php endif; ?>
+            </div>
         </div>
-        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-            <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
-            <h3 style="margin-bottom: 8px;">安全可靠</h3>
-            <p style="color: #888; font-size: 14px;">管理员与用户权限分离，数据安全有保障</p>
-        </div>
-        <div style="background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-            <div style="font-size: 36px; margin-bottom: 12px;">📊</div>
-            <h3 style="margin-bottom: 8px;">实时监控</h3>
-            <p style="color: #888; font-size: 14px;">节点心跳检测，异常即时告警</p>
+        <div class="banner-slides" id="bannerDots">
+            <div class="dot active" data-index="0"></div>
+            <div class="dot" data-index="1"></div>
+            <div class="dot" data-index="2"></div>
         </div>
     </div>
 
-    <div style="margin-top: 48px; display: flex; gap: 16px; justify-content: center;">
-        <?php if (session('user_id')): ?>
-            <a href="/console" class="btn btn-primary" style="padding: 12px 36px; font-size: 16px;">进入控制台</a>
-            <a href="/console/shop" class="btn" style="padding: 12px 36px; font-size: 16px; background: #fff; color: #333; border: 1px solid #dcdfe6; border-radius: 6px;">选购商品</a>
-        <?php else: ?>
-            <a href="/login" class="btn btn-primary" style="padding: 12px 36px; font-size: 16px;">立即登录</a>
-        <?php endif; ?>
+    <!-- 功能特色 -->
+    <div class="home-section">
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">🖥️</div>
+                <h3>节点管理</h3>
+                <p>集中管理多个 FRPS 节点，实时监控运行状态，一键启停</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h3>安全可靠</h3>
+                <p>管理员与用户权限分离，数据安全有保障</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h3>实时监控</h3>
+                <p>节点心跳检测，异常即时告警</p>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+// Banner 轮播
+var bannerImages = [
+    '<?= $site["site_banner_1"] ?? "" ?>',
+    '<?= $site["site_banner_2"] ?? "" ?>',
+    '<?= $site["site_banner_3"] ?? "" ?>',
+];
+
+var bannerData = [
+    { title: '⚡ <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>', desc: '<?= htmlspecialchars($site['site_description'] ?? "高效管理你的 FRPS 节点，一站式反向代理管理平台") ?>' },
+    { title: '🚀 快速部署', desc: '5 分钟完成 FRPS 节点接入，无需复杂配置，开箱即用' },
+    { title: '🌐 全球加速', desc: '多节点智能调度，让你的服务始终在线，快速响应' },
+];
+
+var bannerIndex = 0;
+var bannerTimer = null;
+
+function switchBanner(index) {
+    bannerIndex = index;
+    document.getElementById('bannerTitle').textContent = bannerData[index].title;
+    document.getElementById('bannerDesc').textContent = bannerData[index].desc;
+    // 有自定义图片时覆盖背景
+    var banner = document.getElementById('banner');
+    if (bannerImages[index]) {
+        banner.style.background = 'url(' + bannerImages[index] + ') center/cover no-repeat';
+    } else {
+        banner.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+    }
+    document.querySelectorAll('#bannerDots .dot').forEach(function(dot, i) {
+        dot.classList.toggle('active', i === index);
+    });
+}
+
+function startBanner() {
+    bannerTimer = setInterval(function() {
+        var next = (bannerIndex + 1) % bannerData.length;
+        switchBanner(next);
+    }, 4000);
+}
+
+// 点击圆点切换
+document.querySelectorAll('#bannerDots .dot').forEach(function(dot) {
+    dot.addEventListener('click', function() {
+        var idx = parseInt(this.getAttribute('data-index'));
+        switchBanner(idx);
+        clearInterval(bannerTimer);
+        startBanner();
+    });
+});
+
+startBanner();
+</script>
 {/block}

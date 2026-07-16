@@ -18,7 +18,7 @@ class Index extends BaseController
             return $settings;
         }
 
-        $fields = ['site_name', 'site_favicon', 'site_logo', 'site_description', 'site_footer'];
+        $fields = ['site_name', 'site_favicon', 'site_logo', 'site_description', 'site_footer', 'site_banner_1', 'site_banner_2', 'site_banner_3'];
         $settings = [];
         foreach ($fields as $field) {
             $row = Db::name('setting')->where('name', $field)->find();
@@ -27,7 +27,7 @@ class Index extends BaseController
 
         // 设置默认值
         if (empty($settings['site_name'])) {
-            $settings['site_name'] = 'RelayOps';
+            $settings['site_name'] = '雨梦FRPS业务管理系统';
         }
         if (empty($settings['site_favicon'])) {
             $settings['site_favicon'] = '/favicon.ico';
@@ -74,17 +74,53 @@ class Index extends BaseController
             ->field('id,username,nickname,email,status,create_time')
             ->find();
 
-        // 获取用户节点数
-        $nodeCount = 0;
+        // 获取用户产品列表（已激活/运行中的隧道）
+        $products = [];
         try {
-            $nodeCount = Db::name('node')->where('user_id', $userId)->count();
+            $products = Db::name('client')
+                ->alias('c')
+                ->leftJoin('node n', 'c.node_id = n.id')
+                ->leftJoin('product p', 'c.node_id = p.node_id AND p.status = 1')
+                ->where('c.user_id', $userId)
+                ->where('c.status', 'in', [0, 1])
+                ->field('c.id, c.node_id, c.port, c.proxy_type, c.status, c.expire_time, c.create_time, c.traffic_used, n.name as node_name, n.server_addr, p.traffic_limit')
+                ->order('c.id', 'desc')
+                ->select()
+                ->toArray();
+
+            // 处理过期状态和流量
+            $now = time();
+            foreach ($products as &$p) {
+                $p['is_expired'] = ($p['expire_time'] > 0 && $p['expire_time'] < $now);
+                $p['expire_date'] = $p['expire_time'] ? date('Y-m-d', $p['expire_time']) : '-';
+                $p['created_date'] = $p['create_time'] ? date('Y-m-d', $p['create_time']) : '-';
+                // 剩余流量
+                $trafficLimit = (int) ($p['traffic_limit'] ?? 0);
+                $trafficUsed  = (int) ($p['traffic_used'] ?? 0);
+                if ($trafficLimit > 0) {
+                    $remaining = $trafficLimit - $trafficUsed;
+                    $p['remaining_traffic'] = $remaining > 0 ? $remaining : 0;
+                } else {
+                    $p['remaining_traffic'] = -1; // -1 表示不限
+                }
+            }
+            unset($p);
         } catch (\Exception $e) {}
+
+        $productCount = count($products);
+        $activeCount = 0;
+        foreach ($products as $p) {
+            if (!$p['is_expired'] && $p['status'] == 1) $activeCount++;
+        }
 
         $siteSettings = $this->getSiteSettings();
         return $this->view('index/console', [
-            'user'      => $user,
-            'nodeCount' => $nodeCount,
-            'site'      => $siteSettings,
+            'user'          => $user,
+            'productCount'  => $productCount,
+            'activeCount'   => $activeCount,
+            'products'      => $products,
+            'nodeCount'     => $productCount,
+            'site'          => $siteSettings,
         ]);
     }
 
@@ -112,6 +148,28 @@ class Index extends BaseController
 
         $siteSettings = $this->getSiteSettings();
         return $this->view('index/product', ['site' => $siteSettings]);
+    }
+
+    /**
+     * 我的产品详情页
+     */
+    public function clientDetail(): Response
+    {
+        if (!session('user_id')) {
+            return redirect('/login');
+        }
+
+        $siteSettings = $this->getSiteSettings();
+        return $this->view('index/client_detail', ['site' => $siteSettings]);
+    }
+
+    /**
+     * 关于我们页
+     */
+    public function about(): Response
+    {
+        $siteSettings = $this->getSiteSettings();
+        return $this->view('index/about', ['site' => $siteSettings]);
     }
 
     /**

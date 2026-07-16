@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}商品管理 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="title"}商品管理 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
 {block name="header-title"}商品管理{/block}
 
 {block name="style"}
@@ -92,18 +92,23 @@
                 <div class="form-hint">用户购买时可选的月数</div>
             </div>
             <div class="form-group">
-                <label>排序</label>
-                <input type="number" id="p_sort" value="0" placeholder="越小越靠前">
+                <label>流量限制 <span class="required">*</span></label>
+                <input type="number" id="p_traffic" min="0" step="1" placeholder="例如 100" value="0">
+                <div class="form-hint">单位 GB，0=不限，不允许填0以外的非正整数</div>
             </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row triple">
             <div class="form-group">
                 <label>状态</label>
                 <select id="p_status">
                     <option value="1">上架</option>
                     <option value="0">下架</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>排序</label>
+                <input type="number" id="p_sort" value="0" min="0" placeholder="数字越小越靠前">
             </div>
             <div class="form-group">
                 <label>商品描述</label>
@@ -126,7 +131,7 @@ var nodes = [];
 fetch('/api/admin/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(function(r) { return r.json(); })
     .then(function(res) {
-        nodes = res.data?.list || [];
+        nodes = res.data || [];
         var sel = document.getElementById('p_node_id');
         sel.innerHTML = '<option value="">请选择节点</option>' +
             nodes.map(function(n) {
@@ -184,6 +189,7 @@ function showForm() {
     document.getElementById('p_price').value = '';
     document.getElementById('p_duration_options').value = '1,3,6,12';
     document.getElementById('p_sort').value = '0';
+    document.getElementById('p_traffic').value = '0';
     document.getElementById('p_status').value = '1';
     document.getElementById('p_description').value = '';
     document.getElementById('formMsg').textContent = '';
@@ -211,6 +217,7 @@ function editProduct(id) {
             document.getElementById('p_price').value = p.price;
             document.getElementById('p_duration_options').value = p.duration_options || '1,3,6,12';
             document.getElementById('p_sort').value = p.sort;
+            document.getElementById('p_traffic').value = p.traffic_limit ? (p.traffic_limit / 1024 / 1024 / 1024) : 0;
             document.getElementById('p_status').value = p.status;
             document.getElementById('p_description').value = p.description || '';
         });
@@ -228,6 +235,7 @@ async function saveProduct() {
         price: document.getElementById('p_price').value,
         duration_options: document.getElementById('p_duration_options').value,
         sort: document.getElementById('p_sort').value,
+        traffic_limit: document.getElementById('p_traffic').value,
         status: document.getElementById('p_status').value,
         description: document.getElementById('p_description').value,
     };
@@ -235,6 +243,16 @@ async function saveProduct() {
     if (!data.name || !data.node_id || !data.port_start || !data.port_end || !data.price) {
         msg.style.color = '#f56c6c';
         msg.textContent = '请填写所有必填项';
+        return;
+    }
+
+    // 流量限制校验：0=不限，其他必须是正整数
+    var traffic = parseInt(data.traffic_limit);
+    if (data.traffic_limit === '0') {
+        // 0 表示不限，通过
+    } else if (!traffic || traffic < 1) {
+        msg.style.color = '#f56c6c';
+        msg.textContent = '流量限制：0=不限，其他请填写正整数';
         return;
     }
 

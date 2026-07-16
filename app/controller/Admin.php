@@ -28,7 +28,7 @@ class Admin extends BaseController
 
         // 设置默认值
         if (empty($settings['site_name'])) {
-            $settings['site_name'] = 'RelayOps';
+            $settings['site_name'] = '雨梦FRPS业务管理系统';
         }
         if (empty($settings['site_favicon'])) {
             $settings['site_favicon'] = '/favicon.ico';
@@ -117,7 +117,7 @@ class Admin extends BaseController
     public function settings(): Response
     {
         // 按分组获取所有设置
-        $groups = ['basic', 'system', 'email', 'pay', 'redis'];
+        $groups = ['basic', 'system', 'email', 'pay'];
         $settings = [];
 
         foreach ($groups as $group) {
@@ -142,6 +142,15 @@ class Admin extends BaseController
     {
         $siteSettings = $this->getSiteSettings();
         return $this->view('admin/products', ['active' => 'products', 'site' => $siteSettings]);
+    }
+
+    /**
+     * 订单管理
+     */
+    public function orders(): Response
+    {
+        $siteSettings = $this->getSiteSettings();
+        return $this->view('admin/orders', ['active' => 'orders', 'site' => $siteSettings]);
     }
 
     /**

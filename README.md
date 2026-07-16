@@ -1,10 +1,10 @@
-# RelayOps
+# 雨梦FRPS业务管理系统
 
 FRPS 节点管理销售系统，基于 ThinkPHP 8 + Vue 3 前后端分离架构。
 
 ## 环境要求
 
-- PHP >= 8.2（需要redis,fileinfo,opcache 扩展）
+- PHP >= 8.2（需要fileinfo,opcache 扩展）
 - MySQL >= 5.7
 - 宝塔面板
 

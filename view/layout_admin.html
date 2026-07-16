@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{block name="title"}管理后台 - {$site.site_name ?? 'RelayOps'}{/block}</title>
+    <title>{block name="title"}管理后台 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}</title>
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,7 +51,7 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?>⚡ <?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?><?php endif; ?></div>
+            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?>⚡ <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></div>
             <nav class="sidebar-menu">
                 <a href="/admin/dashboard" class="{if $active == 'dashboard'}active{/if}">
                     <span class="icon">📊</span> 仪表盘
@@ -64,6 +64,9 @@
                 </a>
                 <a href="/admin/users" class="{if $active == 'users'}active{/if}">
                     <span class="icon">👥</span> 用户管理
+                </a>
+                <a href="/admin/orders" class="{if $active == 'orders'}active{/if}">
+                    <span class="icon">📋</span> 订单管理
                 </a>
                 <a href="/admin/settings" class="{if $active == 'settings'}active{/if}">
                     <span class="icon">⚙️</span> 系统设置

@@ -41,7 +41,7 @@ class Mail
 
         // 设置默认值
         if (empty($settings['site_name'])) {
-            $settings['site_name'] = 'RelayOps';
+            $settings['site_name'] = '雨梦FRPS业务管理系统';
         }
 
         return $settings;
@@ -63,7 +63,7 @@ class Mail
         $user = $config['smtp_user'];
         $pass = $config['smtp_pass'];
         $from = $config['smtp_from'] ?: $user;
-        $name = $config['smtp_name'] ?: 'RelayOps';
+        $name = $config['smtp_name'] ?: '雨梦FRPS业务管理系统';
         $ssl = $config['smtp_ssl'] === '1';
 
         $socket = self::connect($host, $port, $ssl);
@@ -290,7 +290,7 @@ class Mail
     {
         $sceneText = $scene === 'register' ? '用户注册' : '密码重置';
         $currentYear = date('Y');
-        $siteName = htmlspecialchars($siteSettings['site_name'] ?? 'RelayOps');
+        $siteName = htmlspecialchars($siteSettings['site_name'] ?? '雨梦FRPS业务管理系统');
         $siteFooter = $siteSettings['site_footer'] ?? "Copyright &copy; {$currentYear} {$siteName}. All rights reserved.";
 
         return <<<HTML

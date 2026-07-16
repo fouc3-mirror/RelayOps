@@ -1,0 +1,278 @@
+{extend name="layout_admin"}
+
+{block name="title"}订单管理 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+{block name="header-title"}订单管理{/block}
+
+{block name="content"}
+
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>订单列表</span>
+        <a href="javascript:;" onclick="showAddModal()" style="padding:6px 16px; background:#409eff; color:#fff; border-radius:4px; font-size:13px;">+ 手动下单</a>
+    </div>
+    <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+        <label style="font-size:13px; color:#666;">筛选：</label>
+        <select id="statusFilter" onchange="loadOrders()" style="padding:6px 10px; border:1px solid #dcdfe6; border-radius:4px; font-size:13px;">
+            <option value="">全部</option>
+            <option value="0">待支付</option>
+            <option value="1">已支付</option>
+            <option value="2">已过期</option>
+            <option value="3">已取消</option>
+        </select>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>订单号</th>
+                <th>用户</th>
+                <th>商品</th>
+                <th>节点</th>
+                <th>端口</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>下单时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="orderList">
+            <tr><td colspan="10" style="text-align:center; color:#999; padding:40px;">加载中...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 手动下单模态框 -->
+<div id="orderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:8px; padding:24px; width:520px; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin:0 0 20px 0; font-size:18px;">为已有用户添加订单</h3>
+        <form id="orderForm">
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">选择用户 <span style="color:#f56c6c;">*</span></label>
+                <select id="orderUserId" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">选择节点 <span style="color:#f56c6c;">*</span></label>
+                <select id="orderNodeId" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">代理类型</label>
+                <select id="orderProxyType" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                    <option value="tcp">TCP</option>
+                    <option value="udp">UDP</option>
+                    <option value="http">HTTP</option>
+                    <option value="https">HTTPS</option>
+                </select>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">端口号 <span style="color:#f56c6c;">*</span></label>
+                <input type="number" id="orderPort" placeholder="输入端口号" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                <div id="orderPortMsg" style="font-size:12px; color:#999; margin-top:4px;"></div>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">购买时长（月） <span style="color:#f56c6c;">*</span></label>
+                <select id="orderDuration" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                    <option value="1">1 个月</option>
+                    <option value="3">3 个月</option>
+                    <option value="6">6 个月</option>
+                    <option value="12">12 个月</option>
+                </select>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">金额（元） <span style="color:#f56c6c;">*</span></label>
+                <input type="number" id="orderAmount" step="0.01" placeholder="0.00" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:500;">订单状态</label>
+                <select id="orderStatus" style="width:100%; padding:8px 12px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px;">
+                    <option value="0">待支付</option>
+                    <option value="1" selected>已支付</option>
+                </select>
+                <div style="font-size:12px; color:#999; margin-top:4px;">设为已支付将自动创建隧道并激活</div>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button type="button" onclick="closeModal()" style="padding:8px 20px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px; cursor:pointer; background:#fff;">取消</button>
+                <button type="submit" style="padding:8px 20px; background:#409eff; color:#fff; border:none; border-radius:4px; font-size:14px; cursor:pointer;">创建订单</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 加载订单列表
+function loadOrders() {
+    var status = document.getElementById('statusFilter').value;
+    var url = '/api/admin/orders';
+    if (status) url += '?status=' + status;
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            var list = res.data || [];
+            var tbody = document.getElementById('orderList');
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#999; padding:40px;">暂无订单</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(function(o) {
+                var statusMap = {'0':'待支付','1':'已支付','2':'已过期','3':'已取消'};
+                var statusClass = {'0':'tag-gray','1':'tag-green','2':'tag-red','3':'tag-gray'};
+                var timeStr = o.create_time ? o.create_time : '-';
+                return '<tr>' +
+                    '<td>' + o.id + '</td>' +
+                    '<td style="font-family:monospace;font-size:12px;">' + o.order_no + '</td>' +
+                    '<td><strong>' + (o.username || '用户' + o.user_id) + '</strong><br><span style="font-size:12px;color:#999;">ID:' + o.user_id + '</span></td>' +
+                    '<td>' + (o.product_name || '-') + '</td>' +
+                    '<td>' + (o.node_name || '节点' + o.node_id) + '</td>' +
+                    '<td style="font-family:monospace;">' + o.port + '</td>' +
+                    '<td><strong>¥' + parseFloat(o.amount).toFixed(2) + '</strong></td>' +
+                    '<td><span class="tag ' + (statusClass[o.status] || 'tag-gray') + '">' + (statusMap[o.status] || '未知') + '</span></td>' +
+                    '<td style="font-size:12px;color:#999;">' + timeStr + '</td>' +
+                    '<td>' +
+                        (o.status == 0 ? '<a href="javascript:;" onclick="payOrder(' + o.id + ')" style="color:#67c23a; margin-right:8px;">标记支付</a>' : '') +
+                        '<a href="javascript:;" onclick="deleteOrder(' + o.id + ')" style="color:#f56c6c;">删除</a>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        })
+        .catch(function() {
+            document.getElementById('orderList').innerHTML = '<tr><td colspan="10" style="text-align:center; color:#f56c6c; padding:40px;">加载失败</td></tr>';
+        });
+}
+
+// 加载用户列表（下拉框）
+function loadUserSelect() {
+    fetch('/api/admin/users', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            var users = res.data || [];
+            var sel = document.getElementById('orderUserId');
+            sel.innerHTML = '<option value="">请选择用户</option>' +
+                users.map(function(u) {
+                    return '<option value="' + u.id + '">' + u.username + (u.nickname ? ' (' + u.nickname + ')' : '') + '</option>';
+                }).join('');
+        });
+}
+
+// 加载节点列表（下拉框）
+function loadNodeSelect() {
+    fetch('/api/admin/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            var nodes = res.data || [];
+            var sel = document.getElementById('orderNodeId');
+            sel.innerHTML = '<option value="">请选择节点</option>' +
+                nodes.map(function(n) {
+                    return '<option value="' + n.id + '" data-port-start="' + n.port_range_start + '" data-port-end="' + n.port_range_end + '">' +
+                        n.name + ' (' + n.server_addr + ':' + n.server_port + ')' +
+                        (n.status == 1 ? '' : ' [已禁用]') +
+                        '</option>';
+                }).join('');
+        });
+}
+
+// 节点切换时提示端口范围
+document.getElementById('orderNodeId').addEventListener('change', function() {
+    var sel = this.options[this.selectedIndex];
+    var start = sel.getAttribute('data-port-start');
+    var end = sel.getAttribute('data-port-end');
+    if (start && end) {
+        document.getElementById('orderPortMsg').textContent = '可用端口范围：' + start + '-' + end;
+    } else {
+        document.getElementById('orderPortMsg').textContent = '';
+    }
+});
+
+// 显示添加模态框
+function showAddModal() {
+    document.getElementById('orderForm').reset();
+    document.getElementById('orderPortMsg').textContent = '';
+    document.getElementById('orderModal').style.display = 'flex';
+    loadUserSelect();
+    loadNodeSelect();
+}
+
+function closeModal() {
+    document.getElementById('orderModal').style.display = 'none';
+}
+
+// 提交手动下单
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var data = {
+        user_id: parseInt(document.getElementById('orderUserId').value),
+        node_id: parseInt(document.getElementById('orderNodeId').value),
+        proxy_type: document.getElementById('orderProxyType').value,
+        port: parseInt(document.getElementById('orderPort').value),
+        duration: parseInt(document.getElementById('orderDuration').value),
+        amount: parseFloat(document.getElementById('orderAmount').value),
+        status: parseInt(document.getElementById('orderStatus').value),
+    };
+
+    if (!data.user_id) { alert('请选择用户'); return; }
+    if (!data.node_id) { alert('请选择节点'); return; }
+    if (!data.port || data.port <= 0) { alert('请输入端口号'); return; }
+    if (!data.amount || data.amount <= 0) { alert('请输入金额'); return; }
+
+    fetch('/api/admin/order/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify(data)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code === 1) {
+            alert(res.msg);
+            closeModal();
+            loadOrders();
+        } else {
+            alert(res.msg || '创建失败');
+        }
+    })
+    .catch(function() { alert('网络错误'); });
+});
+
+// 标记支付
+function payOrder(id) {
+    if (!confirm('确认将该订单标记为已支付？')) return;
+    fetch('/api/admin/order/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: id })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code === 1) {
+            alert(res.msg);
+            loadOrders();
+        } else {
+            alert(res.msg || '操作失败');
+        }
+    });
+}
+
+// 删除订单
+function deleteOrder(id) {
+    if (!confirm('确定删除该订单？')) return;
+    fetch('/api/admin/order/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: id })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code === 1) {
+            alert(res.msg);
+            loadOrders();
+        } else {
+            alert(res.msg || '删除失败');
+        }
+    });
+}
+
+loadOrders();
+</script>
+{/block}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员登录 - {$site.site_name ?? 'RelayOps'}</title>
+    <title>管理员登录 - {$site.site_name ?? '雨梦FRPS业务管理系统'}</title>
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,7 +39,7 @@
 </head>
 <body>
     <div class="login-box">
-        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php else: ?>⚡<?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? 'RelayOps') ?></h2>
+        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php else: ?>⚡<?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h2>
         <div class="sub">管理员登录</div>
         <form onsubmit="return handleLogin(event)">
             <div class="form-group">

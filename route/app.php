@@ -53,6 +53,16 @@ Route::group('api', function () {
 })->middleware(\app\middleware\Cors::class);
 
 // -------------------------------------------------------
+// API 节点通信路由（frps 节点通过 Bearer token 调用）
+// -------------------------------------------------------
+Route::group('api/node', function () {
+    Route::get('user', 'api.NodeController/user');
+    Route::get('can-create-proxy', 'api.NodeController/canCreateProxy');
+    Route::post('traffic', 'api.NodeController/traffic');
+    Route::post('heartbeat', 'api.NodeController/heartbeat');
+})->middleware(\app\middleware\NodeAuth::class);
+
+// -------------------------------------------------------
 // API 用户鉴权路由
 // -------------------------------------------------------
 Route::group('api/user', function () {
@@ -73,6 +83,8 @@ Route::group('api/user', function () {
     Route::get('order/:id/pay', 'api.User/orderPay');
     Route::get('order/:id', 'api.User/orderDetail');
     Route::get('orders', 'api.User/orderList');
+    // 我的产品详情
+    Route::get('client/detail', 'api.User/clientDetail');
 })->middleware(\app\middleware\Cors::class)
   ->middleware(\app\middleware\UserAuth::class);
 
@@ -95,11 +107,17 @@ Route::group('api/admin', function () {
     Route::get('settings', 'api.Admin/settings');
     Route::post('settings', 'api.Admin/saveSettings');
     Route::post('test-email', 'api.Admin/testEmail');
+    Route::post('test-pay', 'api.Admin/testPay');
     // 商品管理
     Route::get('products', 'api.Admin/productList');
     Route::post('product/save', 'api.Admin/productSave');
     Route::post('product/delete', 'api.Admin/productDelete');
     Route::post('product/toggle', 'api.Admin/productToggle');
+    // 订单管理
+    Route::get('orders', 'api.Admin/orderList');
+    Route::post('order/save', 'api.Admin/orderSave');
+    Route::post('order/pay', 'api.Admin/orderPay');
+    Route::post('order/delete', 'api.Admin/orderDelete');
 })->middleware(\app\middleware\Cors::class)
   ->middleware(\app\middleware\AdminAuth::class);
 
@@ -108,7 +126,9 @@ Route::group('api/admin', function () {
 // -------------------------------------------------------
 Route::get('/', 'Index/index');
 Route::get('login', 'Index/login');
+Route::get('about', 'Index/about');
 Route::get('console/shop', 'Index/shop')->middleware(\app\middleware\UserAuth::class);
+Route::get('console/client/:id', 'Index/clientDetail')->middleware(\app\middleware\UserAuth::class);
 Route::get('console', 'Index/console')->middleware(\app\middleware\UserAuth::class);
 Route::get('product/:id', 'Index/product')->middleware(\app\middleware\UserAuth::class);
 
@@ -123,12 +143,15 @@ Route::group('admin', function () {
     Route::get('nodes', 'Admin/nodes');
     Route::get('products', 'Admin/products');
     Route::get('users', 'Admin/users');
-    Route::get('settings', 'Admin/settings');
+    Route::get('orders', 'Admin/orders')->middleware(\app\middleware\AdminAuth::class);
 })->middleware(\app\middleware\AdminAuth::class);
 
 // -------------------------------------------------------
 // 其他路由
 // -------------------------------------------------------
+Route::get('migrate', 'Migrate/index');
+Route::get('migrate/preview', 'Migrate/preview');
+Route::post('migrate/execute', 'Migrate/execute');
 Route::get('think', fn() => 'hello,ThinkPHP8!');
 
 Route::get('hello/:name', 'index/hello');

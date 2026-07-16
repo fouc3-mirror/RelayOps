@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}系统设置 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="title"}系统设置 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
 {block name="header-title"}系统设置{/block}
 
 {block name="style"}
@@ -37,7 +37,6 @@
         <div class="tab-item" onclick="switchTab('system')">🔧 系统信息</div>
         <div class="tab-item" onclick="switchTab('email')">📧 邮件配置</div>
         <div class="tab-item" onclick="switchTab('pay')">💰 支付配置</div>
-        <div class="tab-item" onclick="switchTab('redis')">⚡ Redis 配置</div>
     </div>
 
     <!-- 基本设置 -->
@@ -73,6 +72,15 @@
                 <div class="form-group">
                     <label>页脚代码</label>
                     <textarea data-name="site_footer">{$settings.basic.site_footer ?? ''}</textarea>
+                </div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group">
+                    <label>Banner 轮播图片</label>
+                    <input type="text" data-name="site_banner_1" value="{$settings.basic.site_banner_1 ?? ''}" placeholder="第1张背景图URL（留空使用渐变色）" style="margin-bottom:6px;">
+                    <input type="text" data-name="site_banner_2" value="{$settings.basic.site_banner_2 ?? ''}" placeholder="第2张背景图URL（留空使用渐变色）" style="margin-bottom:6px;">
+                    <input type="text" data-name="site_banner_3" value="{$settings.basic.site_banner_3 ?? ''}" placeholder="第3张背景图URL（留空使用渐变色）">
+                    <div class="form-hint">填写图片URL会覆盖渐变背景，建议尺寸 1100×360px</div>
                 </div>
             </div>
             <div class="form-actions">
@@ -141,7 +149,7 @@
                 </div>
                 <div class="form-group">
                     <label>发件人名称</label>
-                    <input type="text" data-name="smtp_name" value="{$settings.email.smtp_name ?? 'RelayOps'}">
+                    <input type="text" data-name="smtp_name" value="{$settings.email.smtp_name ?? '雨梦FRPS业务管理系统'}">
                 </div>
             </div>
             <div class="form-row">
@@ -187,45 +195,9 @@
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-primary" onclick="saveGroup('pay')">保存支付配置</button>
+                <button type="button" class="btn btn-secondary" onclick="testPay()">支付测试 (1元)</button>
             </div>
             <div id="msg-pay" class="form-tip"></div>
-        </form>
-    </div>
-
-    <!-- Redis 配置 -->
-    <div id="tab-redis" class="tab-panel">
-        <form onsubmit="return false;">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Redis 服务器地址</label>
-                    <input type="text" data-name="redis_host" value="{$settings.redis.redis_host ?? '127.0.0.1'}">
-                </div>
-                <div class="form-group">
-                    <label>Redis 端口</label>
-                    <input type="number" data-name="redis_port" value="{$settings.redis.redis_port ?? '6379'}">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Redis 密码</label>
-                    <input type="text" data-name="redis_password" value="{$settings.redis.redis_password ?? ''}" placeholder="无密码留空">
-                </div>
-                <div class="form-group">
-                    <label>Redis 数据库编号</label>
-                    <input type="number" data-name="redis_select" value="{$settings.redis.redis_select ?? '0'}">
-                </div>
-            </div>
-            <div class="form-row single">
-                <div class="form-group">
-                    <label>Redis Key 前缀</label>
-                    <input type="text" data-name="redis_prefix" value="{$settings.redis.redis_prefix ?? 'frp:'}">
-                    <div class="form-hint">FRPS 相关的 Redis Key 都会以此为前缀</div>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-primary" onclick="saveGroup('redis')">保存 Redis 配置</button>
-            </div>
-            <div id="msg-redis" class="form-tip"></div>
         </form>
     </div>
 </div>
@@ -285,6 +257,36 @@ async function testEmail() {
         var json = await res.json();
         msg.style.color = json.code === 1 ? '#388e3c' : '#f56c6c';
         msg.textContent = json.code === 1 ? '测试邮件已发送' : (json.msg || '发送失败');
+    } catch(err) {
+        msg.style.color = '#f56c6c';
+        msg.textContent = '网络错误';
+    }
+}
+
+async function testPay() {
+    var payType = prompt('请选择支付方式：\n输入 alipay (支付宝) 或 wxpay (微信)', 'alipay');
+    if (!payType) return;
+    if (payType !== 'alipay' && payType !== 'wxpay') {
+        alert('请输入 alipay 或 wxpay');
+        return;
+    }
+    var msg = document.getElementById('msg-pay');
+    msg.style.color = '#999';
+    msg.textContent = '正在生成支付链接...';
+    try {
+        var res = await fetch('/api/admin/test-pay', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ pay_type: payType })
+        });
+        var json = await res.json();
+        if (json.code === 0 && json.data && json.data.url) {
+            msg.style.color = '#388e3c';
+            msg.innerHTML = '测试订单已生成，<a href="' + json.data.url + '" target="_blank" style="color:#388e3c;font-weight:bold;">点击支付测试 (1元)</a>';
+        } else {
+            msg.style.color = '#f56c6c';
+            msg.textContent = json.msg || '支付测试失败';
+        }
     } catch(err) {
         msg.style.color = '#f56c6c';
         msg.textContent = '网络错误';

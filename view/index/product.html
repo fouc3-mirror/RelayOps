@@ -1,13 +1,17 @@
 {extend name="layout_user"}
 
-{block name="title"}商品详情 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="title"}商品详情 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+
+{block name="head"}
+<link rel="stylesheet" href="/themes/cart.css">
+{/block}
 
 {block name="content"}
-<div style="max-width:800px;margin:0 auto;">
-    <a href="/console/shop" style="color:#409eff;text-decoration:none;font-size:14px;display:inline-block;margin-bottom:24px;">← 返回商品列表</a>
+<div class="product-detail-page">
+    <a href="/console/shop" class="back-link">← 返回商品列表</a>
 
-    <div id="productDetail" style="background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-        <div style="text-align:center;padding:40px;color:#999;">加载中...</div>
+    <div id="productDetail" class="product-detail-card">
+        <div class="loading-placeholder"><div class="icon">⏳</div><p>加载中...</p></div>
     </div>
 </div>
 
@@ -24,14 +28,6 @@ fetch('/api/user/product/' + productId, { headers: { 'X-Requested-With': 'XMLHtt
         var p = res.data;
         var tagColor = {tcp:'#409eff',udp:'#e6a23c',http:'#67c23a',https:'#f56c6c'}[p.proxy_type] || '#999';
 
-        // 生成端口选项
-        var portOptions = '';
-        if (p.available_ports && p.available_ports.length > 0) {
-            portOptions = p.available_ports.map(function(port) {
-                return '<option value="' + port + '">端口 ' + port + '</option>';
-            }).join('');
-        }
-
         // 生成时长选项
         var durationOptions = '';
         if (p.durations && p.durations.length > 0) {
@@ -41,39 +37,42 @@ fetch('/api/user/product/' + productId, { headers: { 'X-Requested-With': 'XMLHtt
         }
 
         document.getElementById('productDetail').innerHTML =
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">' +
-                '<h1 style="margin:0;font-size:24px;">' + p.name + '</h1>' +
+            '<div class="detail-header">' +
+                '<h1>' + p.name + '</h1>' +
                 '<span style="background:' + tagColor + ';color:#fff;padding:4px 12px;border-radius:4px;font-size:14px;">' + p.proxy_type.toUpperCase() + '</span>' +
             '</div>' +
-            '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">' +
-                '<div><div style="font-size:13px;color:#999;margin-bottom:4px;">节点</div><div style="font-size:15px;font-weight:500;">' + p.node_name + '</div></div>' +
-                '<div><div style="font-size:13px;color:#999;margin-bottom:4px;">服务器</div><div style="font-size:15px;font-weight:500;">' + p.server_addr + ':' + p.server_port + '</div></div>' +
-                '<div><div style="font-size:13px;color:#999;margin-bottom:4px;">端口范围</div><div style="font-size:15px;font-weight:500;font-family:monospace;">' + p.port_start + ' - ' + p.port_end + '</div></div>' +
-                '<div><div style="font-size:13px;color:#999;margin-bottom:4px;">可用端口</div><div style="font-size:15px;font-weight:500;' + (p.available_count === 0 ? 'color:#f56c6c;' : '') + '">' + p.available_count + ' 个</div></div>' +
+            '<div class="info-grid">' +
+                '<div class="info-item"><div class="label">节点</div><div class="value">' + p.node_name + '</div></div>' +
+                '<div class="info-item"><div class="label">服务器</div><div class="value">' + p.server_addr + ':' + p.server_port + '</div></div>' +
+                '<div class="info-item"><div class="label">可选端口范围</div><div class="value" style="font-family:monospace;">' + p.port_start + ' - ' + p.port_end + '</div></div>' +
+                '<div class="info-item"><div class="label">剩余可用端口</div><div class="value" style="' + (p.available_count === 0 ? 'color:#f56c6c;' : '') + '">' + p.available_count + ' 个</div></div>' +
             '</div>' +
             (p.description ? '<div style="margin-bottom:24px;"><h3 style="font-size:16px;margin-bottom:8px;">商品描述</h3><p style="color:#666;line-height:1.6;">' + p.description + '</p></div>' : '') +
-            '<hr style="border:none;border-top:1px solid #f0f0f0;margin:24px 0;">' +
-            '<h3 style="font-size:18px;margin-bottom:20px;">订购配置</h3>' +
+            '<hr class="config-divider">' +
+            '<div class="config-section">' +
+            '<h3>订购配置</h3>' +
             '<div style="margin-bottom:20px;">' +
-                '<label style="display:block;margin-bottom:8px;font-size:14px;font-weight:500;">选择端口</label>' +
-                '<select id="portSelect" style="width:100%;padding:10px 14px;border:1px solid #dcdfe6;border-radius:6px;font-size:14px;">' +
-                    (portOptions || '<option value="">暂无可用端口</option>') +
-                '</select>' +
-                '<div style="font-size:12px;color:#999;margin-top:4px;">已选端口将独占使用，直到订单到期</div>' +
+                '<label style="display:block;margin-bottom:8px;font-size:14px;font-weight:500;">端口 <span style="color:#999;font-weight:400;font-size:12px;">范围 ' + p.port_start + '-' + p.port_end + '</span></label>' +
+                '<div style="display:flex;gap:10px;align-items:center;">' +
+                    '<input type="number" id="portInput" class="el-input" min="' + p.port_start + '" max="' + p.port_end + '" placeholder="输入端口号" style="flex:1;padding:10px 14px;border:1px solid #dcdfe6;border-radius:6px;font-size:14px;outline:none;" oninput="checkPort()">' +
+                    '<span id="portStatus" style="font-size:13px;min-width:60px;"></span>' +
+                '</div>' +
+                '<div id="portMsg" style="font-size:12px;color:#999;margin-top:4px;"></div>' +
             '</div>' +
             '<div style="margin-bottom:20px;">' +
                 '<label style="display:block;margin-bottom:8px;font-size:14px;font-weight:500;">购买时长</label>' +
-                '<select id="durationSelect" style="width:100%;padding:10px 14px;border:1px solid #dcdfe6;border-radius:6px;font-size:14px;" onchange="updatePrice()">' +
+                '<select id="durationSelect" class="el-select" style="width:100%;padding:10px 14px;border:1px solid #dcdfe6;border-radius:6px;font-size:14px;" onchange="updatePrice()">' +
                     durationOptions +
                 '</select>' +
             '</div>' +
             '<div style="margin-bottom:24px;">' +
                 '<label style="display:block;margin-bottom:8px;font-size:14px;font-weight:500;">费用合计</label>' +
-                '<div style="display:flex;align-items:baseline;gap:8px;">' +
-                    '<span style="font-size:20px;font-weight:600;color:#f56c6c;">¥' + parseFloat(p.price).toFixed(2) + '</span>' +
-                    '<span style="font-size:14px;color:#999;">/月 × <span id="durationText">1</span> 个月 =</span>' +
-                    '<span id="totalPrice" style="font-size:28px;font-weight:700;color:#f56c6c;">¥' + parseFloat(p.price).toFixed(2) + '</span>' +
+                '<div class="price-summary">' +
+                    '<span class="unit">¥' + parseFloat(p.price).toFixed(2) + '</span>' +
+                    '<span class="calc">/月 × <span id="durationText">1</span> 个月 =</span>' +
+                    '<span id="totalPrice" class="total">¥' + parseFloat(p.price).toFixed(2) + '</span>' +
                 '</div>' +
+            '</div>' +
             '</div>' +
             '<div style="text-align:center;">' +
                 '<button id="orderBtn" onclick="createOrder()" style="background:#409eff;color:#fff;border:none;padding:12px 48px;border-radius:6px;font-size:16px;cursor:pointer;">立即订购</button>' +
@@ -81,11 +80,14 @@ fetch('/api/user/product/' + productId, { headers: { 'X-Requested-With': 'XMLHtt
 
         // 存储商品数据
         window.productData = p;
+        window.portChecked = false;
         updatePrice();
     })
     .catch(function(err) {
         document.getElementById('productDetail').innerHTML = '<div style="text-align:center;padding:40px;color:#f56c6c;">网络错误</div>';
     });
+
+var checkTimeout = null;
 
 function updatePrice() {
     if (!window.productData) return;
@@ -95,13 +97,81 @@ function updatePrice() {
     document.getElementById('totalPrice').textContent = '¥' + total.toFixed(2);
 }
 
+function checkPort() {
+    var portInput = document.getElementById('portInput');
+    var portStatus = document.getElementById('portStatus');
+    var portMsg = document.getElementById('portMsg');
+    var port = parseInt(portInput.value);
+    var p = window.productData;
+
+    window.portChecked = false;
+
+    if (!port) {
+        portStatus.textContent = '';
+        portMsg.textContent = '';
+        portInput.style.borderColor = '#dcdfe6';
+        return;
+    }
+
+    // 校验端口范围
+    if (port < p.port_start || port > p.port_end) {
+        portStatus.textContent = '✗';
+        portStatus.style.color = '#f56c6c';
+        portMsg.textContent = '端口范围：' + p.port_start + '-' + p.port_end;
+        portMsg.style.color = '#f56c6c';
+        portInput.style.borderColor = '#f56c6c';
+        return;
+    }
+
+    portStatus.textContent = '⏳';
+    portStatus.style.color = '#999';
+    portMsg.textContent = '检测中...';
+    portMsg.style.color = '#999';
+    portInput.style.borderColor = '#dcdfe6';
+
+    if (checkTimeout) clearTimeout(checkTimeout);
+    checkTimeout = setTimeout(function() {
+        fetch('/api/user/ports?node_id=' + p.node_id, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.code === 1 && res.data && res.data.occupied_ports) {
+                if (res.data.occupied_ports.indexOf(port) !== -1) {
+                    portStatus.textContent = '✗ 已被占用';
+                    portStatus.style.color = '#f56c6c';
+                    portMsg.textContent = '该端口已被其他用户购买';
+                    portMsg.style.color = '#f56c6c';
+                    portInput.style.borderColor = '#f56c6c';
+                } else {
+                    portStatus.textContent = '✓ 可用';
+                    portStatus.style.color = '#67c23a';
+                    portMsg.textContent = '';
+                    portInput.style.borderColor = '#67c23a';
+                    window.portChecked = true;
+                }
+            }
+        })
+        .catch(function() {
+            // 检测失败时默认通过，由后端二次校验
+            window.portChecked = true;
+        });
+    }, 400);
+}
+
 function createOrder() {
-    var port = document.getElementById('portSelect').value;
+    var port = parseInt(document.getElementById('portInput').value);
     var duration = parseInt(document.getElementById('durationSelect').value) || 1;
     var btn = document.getElementById('orderBtn');
 
     if (!port) {
-        alert('请选择端口');
+        alert('请输入端口');
+        return;
+    }
+
+    var p = window.productData;
+    if (port < p.port_start || port > p.port_end) {
+        alert('端口不在可用范围内：' + p.port_start + '-' + p.port_end);
         return;
     }
 
@@ -116,7 +186,7 @@ function createOrder() {
         },
         body: JSON.stringify({
             product_id: window.productData.id,
-            port: parseInt(port),
+            port: port,
             duration: duration
         })
     })

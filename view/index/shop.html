@@ -1,16 +1,20 @@
 {extend name="layout_user"}
 
-{block name="title"}商品列表 - {$site.site_name ?? 'RelayOps'}{/block}
+{block name="title"}商品列表 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+
+{block name="head"}
+<link rel="stylesheet" href="/themes/cart.css">
+{/block}
 
 {block name="content"}
-<div style="max-width:1100px;margin:0 auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-        <h2 style="margin:0;">购买隧道节点</h2>
-        <a href="/console" style="color:#409eff;text-decoration:none;font-size:14px;">← 返回控制台</a>
+<div class="shop-page">
+    <div class="shop-header">
+        <h2>购买隧道节点</h2>
+        <a href="/console" class="back-link">← 返回控制台</a>
     </div>
 
-    <div id="productList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-        <div style="text-align:center;padding:60px;color:#999;grid-column:1/-1;">加载中...</div>
+    <div id="productList" class="product-grid">
+        <div class="loading-placeholder"><div class="icon">⏳</div><p>加载中...</p></div>
     </div>
 </div>
 
@@ -19,28 +23,28 @@ fetch('/api/user/products', { headers: { 'X-Requested-With': 'XMLHttpRequest' } 
     .then(function(r) { return r.json(); })
     .then(function(res) {
         if (res.code !== 1 || !res.data || !res.data.length) {
-            document.getElementById('productList').innerHTML = '<div style="text-align:center;padding:80px;color:#999;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:16px;">📦</div><p>暂无在售商品</p></div>';
+            document.getElementById('productList').innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>暂无在售商品</p></div>';
             return;
         }
         var html = res.data.map(function(p) {
             var tagColor = {tcp:'#409eff',udp:'#e6a23c',http:'#67c23a',https:'#f56c6c'}[p.proxy_type] || '#999';
-            return '<div style="background:#fff;border-radius:10px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);display:flex;flex-direction:column;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
-                    '<h3 style="margin:0;font-size:16px;">' + p.name + '</h3>' +
-                    '<span style="background:' + tagColor + ';color:#fff;padding:2px 10px;border-radius:4px;font-size:12px;">' + p.proxy_type.toUpperCase() + '</span>' +
+            return '<div class="product-card">' +
+                '<div class="top">' +
+                    '<h3>' + p.name + '</h3>' +
+                    '<span class="tag" style="background:' + tagColor + ';">' + p.proxy_type.toUpperCase() + '</span>' +
                 '</div>' +
-                '<div style="font-size:13px;color:#666;margin-bottom:6px;">🖥️ ' + p.node_name + '</div>' +
-                '<div style="font-size:13px;color:#999;margin-bottom:8px;">端口范围：<span style="font-family:monospace;">' + p.port_start + '-' + p.port_end + '</span></div>' +
-                '<div style="font-size:14px;color:#f56c6c;margin-bottom:8px;">¥<strong style="font-size:22px;">' + parseFloat(p.price).toFixed(2) + '</strong>/月</div>' +
-                (p.description ? '<div style="font-size:12px;color:#999;margin-bottom:8px;">' + p.description + '</div>' : '') +
+                '<div class="meta">🖥️ ' + p.node_name + '</div>' +
+                '<div class="port-range">端口范围：<span>' + p.port_start + '-' + p.port_end + '</span></div>' +
+                '<div class="price">¥<strong>' + parseFloat(p.price).toFixed(2) + '</strong>/月</div>' +
+                (p.description ? '<div class="desc">' + p.description + '</div>' : '') +
                 '<div style="flex:1;"></div>' +
-                '<a href="/product/' + p.id + '" style="display:block;text-align:center;background:#409eff;color:#fff;padding:10px;border-radius:6px;text-decoration:none;font-size:14px;margin-top:12px;">立即订购</a>' +
+                '<a href="/product/' + p.id + '" class="btn-order">立即订购</a>' +
             '</div>';
         }).join('');
         document.getElementById('productList').innerHTML = html;
     })
     .catch(function() {
-        document.getElementById('productList').innerHTML = '<div style="text-align:center;padding:40px;color:#f56c6c;grid-column:1/-1;">加载失败</div>';
+        document.getElementById('productList').innerHTML = '<div class="load-error">加载失败</div>';
     });
 </script>
 {/block}

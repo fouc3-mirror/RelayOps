@@ -183,7 +183,7 @@ class Install extends BaseController
         $adminUser  = $this->request->param('admin_user', 'admin');
         $adminPass  = $this->request->param('admin_pass', '');
         $adminEmail = $this->request->param('admin_email', '');
-        $siteName   = $this->request->param('site_name', 'RelayOps');
+        $siteName   = $this->request->param('site_name', '雨梦FRPS业务管理系统');
         $siteDescription = $this->request->param('site_description', '');
 
         // 验证参数
@@ -291,12 +291,7 @@ class Install extends BaseController
             $envContent .= "DB_PORT = {$dbPort}\n";
             $envContent .= "DB_CHARSET = utf8mb4\n";
             $envContent .= "DB_PREFIX = RO_\n\n";
-            $envContent .= "DEFAULT_LANG = zh-cn\n\n";
-            $envContent .= "REDIS_HOST = 127.0.0.1\n";
-            $envContent .= "REDIS_PORT = 6379\n";
-            $envContent .= "REDIS_PASSWORD = \n";
-            $envContent .= "REDIS_SELECT = 0\n";
-            $envContent .= "REDIS_PREFIX = frp:\n";
+            $envContent .= "DEFAULT_LANG = zh-cn\n";
 
             if (!file_put_contents($this->envFile, $envContent)) {
                 throw new \RuntimeException('无法写入 .env 配置文件，请检查目录权限');
@@ -419,9 +414,6 @@ class Install extends BaseController
             return '缺少PHP扩展：mbstring';
         }
 
-        // Redis 扩展检测（推荐但不阻断安装）
-        // redis 扩展不在 checkEnvironment 中阻断，而是在扩展检测页面显示状态
-
         return true;
     }
 
@@ -439,7 +431,6 @@ class Install extends BaseController
             'xml'       => 'XML扩展',
             'fileinfo'  => 'Fileinfo扩展',
             'openssl'   => 'OpenSSL扩展',
-            'redis'     => 'Redis扩展',
         ];
 
         $result = [];

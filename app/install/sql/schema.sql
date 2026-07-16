@@ -1,4 +1,4 @@
---RelayOps 安装向导 - 数据库表结构
+--雨梦FRPS业务管理系统 安装向导 - 数据库表结构
 -- 表前缀: RO_
 
 -------------------------------------------------------------
@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `RO_node` (
     `server_addr` varchar(100) NOT NULL COMMENT '服务器IP地址',
     `server_port` int(5) UNSIGNED NOT NULL DEFAULT 7000 COMMENT 'frps服务端口',
     `auth_token` varchar(100) NOT NULL COMMENT 'API密钥/认证令牌',
+    `domain` varchar(200) DEFAULT '' COMMENT '域名（如 frp.example.com）',
     `http_port` int(5) UNSIGNED NOT NULL DEFAULT 80 COMMENT 'HTTP虚拟主机端口',
     `https_port` int(5) UNSIGNED NOT NULL DEFAULT 443 COMMENT 'HTTPS虚拟主机端口',
     `dashboard_port` int(5) UNSIGNED NOT NULL DEFAULT 7500 COMMENT 'Dashboard端口',
@@ -60,6 +61,8 @@ CREATE TABLE IF NOT EXISTS `RO_node` (
     `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常',
     `description` text COMMENT '节点描述',
     `last_heartbeat` int(11) DEFAULT NULL COMMENT '最后心跳时间',
+    `online_count` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前在线客户端数',
+    `allow_create_proxy` tinyint(1) NOT NULL DEFAULT 1 COMMENT '允许新建隧道 0=关闭 1=开启',
     `create_time` int(11) DEFAULT NULL COMMENT '创建时间',
     `update_time` int(11) DEFAULT NULL COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -77,6 +80,7 @@ CREATE TABLE IF NOT EXISTS `RO_user` (
     `email` varchar(100) DEFAULT '' COMMENT '邮箱',
     `phone` varchar(20) DEFAULT '' COMMENT '手机号',
     `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态 0:禁用 1:正常',
+    `bandwidth_limit` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '带宽限制（字节/秒），0=不限',
     `last_login_time` int(11) DEFAULT NULL COMMENT '最后登录时间',
     `last_login_ip` varchar(50) DEFAULT '' COMMENT '最后登录IP',
     `create_time` int(11) DEFAULT NULL COMMENT '创建时间',
@@ -110,17 +114,21 @@ CREATE TABLE IF NOT EXISTS `RO_client` (
     `node_id` int(11) UNSIGNED NOT NULL COMMENT '关联节点',
     `port` int(5) UNSIGNED NOT NULL COMMENT '分配的端口',
     `token` varchar(128) NOT NULL COMMENT '唯一鉴权token',
+    `proxy_name` varchar(100) NOT NULL DEFAULT '' COMMENT '代理名称（如 tcp_8080）',
     `proxy_type` varchar(20) NOT NULL DEFAULT 'tcp' COMMENT '代理类型: tcp/udp/http/https',
     `local_ip` varchar(100) DEFAULT '127.0.0.1' COMMENT '本地监听地址',
     `local_port` int(5) UNSIGNED DEFAULT 0 COMMENT '本地监听端口',
     `status` tinyint(1) NOT NULL DEFAULT 0 COMMENT '状态 0:未激活 1:运行中 2:已过期',
+    `bandwidth_limit` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '带宽限制（字节/秒），0=不限',
+    `traffic_used` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '已使用流量（字节）',
     `expire_time` int(11) NOT NULL COMMENT '到期时间',
     `create_time` int(11) DEFAULT NULL COMMENT '创建时间',
     `update_time` int(11) DEFAULT NULL COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_node_port` (`node_id`, `port`),
     KEY `idx_user_id` (`user_id`),
-    KEY `idx_expire_time` (`expire_time`)
+    KEY `idx_expire_time` (`expire_time`),
+    KEY `idx_node_proxy_name` (`node_id`, `proxy_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端/隧道表';
 
 -- --------------------------------------------------------
@@ -150,11 +158,14 @@ CREATE TABLE IF NOT EXISTS `RO_order` (
 -- 插入默认配置（使用 INSERT IGNORE 避免重复插入报错）
 INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `create_time`, `update_time`) VALUES
 ('basic', 'site_name', '我的网站', 'text', '网站名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('basic', 'site_description', 'RelayOps是一个基于ThinkPHP8开发的开源项目', 'textarea', '网站描述', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('basic', 'site_description', '雨梦FRPS业务管理系统是一个基于ThinkPHP8开发的开源项目', 'textarea', '网站描述', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_keywords', 'ThinkPHP8,CMS', 'text', '网站关键词', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_logo', '', 'image', '网站Logo', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_favicon', '', 'image', '网站图标', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_footer', 'Copyright © All Rights Reserved.', 'textarea', '页脚代码', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('basic', 'site_banner_1', '', 'image', 'Banner第1张', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('basic', 'site_banner_2', '', 'image', 'Banner第2张', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('basic', 'site_banner_3', '', 'image', 'Banner第3张', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('system', 'admin_email', 'admin@example.com', 'text', '管理员邮箱', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('system', 'admin_phone', '', 'text', '管理员电话', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('system', 'icp_number', '', 'text', 'ICP备案号', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
@@ -167,7 +178,7 @@ INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `cre
 ('email', 'smtp_user', '', 'text', 'SMTP用户名', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_pass', '', 'text', 'SMTP密码', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_from', '', 'text', '发件人邮箱', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('email', 'smtp_name', 'RelayOps', 'text', '发件人名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('email', 'smtp_name', '雨梦FRPS业务管理系统', 'text', '发件人名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_ssl', '1', 'switch', '启用SSL', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'verify_expire', '300', 'number', '验证码有效期(秒)', UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
@@ -199,6 +210,7 @@ CREATE TABLE IF NOT EXISTS `RO_product` (
     `duration_options` varchar(100) DEFAULT '1,3,6,12' COMMENT '可选时长(月),逗号分隔',
     `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态 0:下架 1:上架',
     `sort` int(11) NOT NULL DEFAULT 0 COMMENT '排序',
+    `traffic_limit` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '流量限制（字节），0=不限, 单位G时存储 1*1024*1024*1024',
     `description` text COMMENT '商品描述',
     `create_time` int(11) DEFAULT NULL COMMENT '创建时间',
     `update_time` int(11) DEFAULT NULL COMMENT '更新时间',
@@ -206,3 +218,22 @@ CREATE TABLE IF NOT EXISTS `RO_product` (
     KEY `idx_node_id` (`node_id`),
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品表';
+
+-- --------------------------------------------------------
+-- 流量明细表
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `RO_traffic_log` (
+    `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `node_id` int(11) UNSIGNED NOT NULL COMMENT '节点ID',
+    `user_id` int(11) UNSIGNED NOT NULL COMMENT '用户ID',
+    `proxy_name` varchar(100) NOT NULL DEFAULT '' COMMENT '代理名称',
+    `in_bytes` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '入站流量（字节）',
+    `out_bytes` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '出站流量（字节）',
+    `record_time` int(11) UNSIGNED NOT NULL COMMENT '记录时间（分钟级时间戳）',
+    `create_time` int(11) UNSIGNED NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_node_id` (`node_id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_record_time` (`record_time`),
+    KEY `idx_node_record` (`node_id`, `record_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流量明细表（节点上报）';

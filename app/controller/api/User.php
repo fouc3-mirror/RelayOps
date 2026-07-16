@@ -423,7 +423,7 @@ class User extends BaseController
         }
 
         // 生成支付链接
-        $subject = "RelayOps - {$product['name']} 端口 {$port} ({$product['proxy_type']})";
+        $subject = "雨梦FRPS业务管理系统 - {$product['name']} 端口 {$port} ({$product['proxy_type']})";
 
         $payResult = \app\service\EpayService::createPayment(
             $orderNo,
@@ -498,10 +498,11 @@ class User extends BaseController
         return json([
             'code' => 1,
             'data' => [
-                'ports'      => $available,
-                'total'      => $rangeEnd - $rangeStart + 1,
-                'occupied'   => count($occupied),
-                'available'  => count($available),
+                'ports'         => $available,
+                'total'         => $rangeEnd - $rangeStart + 1,
+                'occupied'      => count($occupied),
+                'available'     => count($available),
+                'occupied_ports' => $occupied,
             ],
         ]);
     }
@@ -706,7 +707,7 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '订单不存在或已支付']);
         }
 
-        $subject = "RelayOps - {$order['node_name']} 端口 {$order['port']} ({$order['proxy_type']})";
+        $subject = "雨梦FRPS业务管理系统 - {$order['node_name']} 端口 {$order['port']} ({$order['proxy_type']})";
 
         $result = \app\service\EpayService::createPayment(
             $order['order_no'],
@@ -772,5 +773,61 @@ class User extends BaseController
         $order['pay_time_text'] = $order['pay_time'] ? date('Y-m-d H:i:s', $order['pay_time']) : '-';
 
         return json(['code' => 1, 'data' => $order]);
+    }
+
+    /**
+     * 获取我的产品详情（客户端隧道）
+     */
+    public function clientDetail(): Response
+    {
+        $id = (int) $this->request->param('id', 0);
+        $userId = session('user_id');
+
+        if ($id <= 0) {
+            return json(['code' => 0, 'msg' => '无效的产品ID']);
+        }
+
+        $client = Db::name('client')
+            ->alias('c')
+            ->leftJoin('node n', 'c.node_id = n.id')
+            ->leftJoin('product p', 'c.node_id = p.node_id AND p.status = 1')
+            ->where('c.id', $id)
+            ->where('c.user_id', $userId)
+            ->field([
+                'c.id', 'c.node_id', 'c.port', 'c.proxy_type', 'c.token',
+                'c.status', 'c.expire_time', 'c.create_time', 'c.traffic_used',
+                'n.name AS node_name', 'n.server_addr', 'n.domain',
+                'p.name AS product_name', 'p.traffic_limit',
+            ])
+            ->find();
+
+        if (!$client) {
+            return json(['code' => 0, 'msg' => '产品不存在']);
+        }
+
+        // 格式化
+        $client['expire_date']  = $client['expire_time'] ? date('Y-m-d H:i', $client['expire_time']) : '-';
+        $client['create_date']  = $client['create_time'] ? date('Y-m-d H:i', $client['create_time']) : '-';
+        $client['is_expired']   = ($client['expire_time'] > 0 && $client['expire_time'] < time());
+        $client['status_text']  = $client['is_expired'] || $client['status'] == 2
+            ? '已过期'
+            : ($client['status'] == 1 ? '运行中' : '未激活');
+
+        // 剩余流量
+        $trafficLimit = (int) ($client['traffic_limit'] ?? 0);
+        $trafficUsed  = (int) ($client['traffic_used'] ?? 0);
+        if ($trafficLimit > 0) {
+            $remaining = $trafficLimit - $trafficUsed;
+            $client['remaining_traffic'] = $remaining > 0 ? $remaining : 0;
+        } else {
+            $client['remaining_traffic'] = -1; // -1 表示不限
+        }
+        $client['traffic_limit_gb'] = $trafficLimit > 0 ? round($trafficLimit / 1024 / 1024 / 1024, 2) : 0;
+        $client['traffic_used_gb']  = round($trafficUsed / 1024 / 1024 / 1024, 2);
+
+        // 连接信息（域名优先，否则用 IP）
+        $client['connect_host'] = !empty($client['domain']) ? $client['domain'] : $client['server_addr'];
+
+        return json(['code' => 1, 'data' => $client]);
     }
 }

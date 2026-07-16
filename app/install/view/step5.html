@@ -1,6 +1,6 @@
 {extend name="layout"}
 
-{block name="title"}安装中 - RelayOps安装向导{/block}
+{block name="title"}安装中 - 雨梦FRPS业务管理系统安装向导{/block}
 
 {block name="content"}
 <div class="install-steps">
@@ -65,7 +65,7 @@
         var adminUser = sessionStorage.getItem('admin_user') || 'admin';
         var adminPass = sessionStorage.getItem('admin_pass') || '';
         var adminEmail = sessionStorage.getItem('admin_email') || '';
-        var siteName = sessionStorage.getItem('site_name') || 'RelayOps';
+        var siteName = sessionStorage.getItem('site_name') || '雨梦FRPS业务管理系统';
         var siteDescription = sessionStorage.getItem('site_description') || '';
 
         if (!dbName || !dbUser || !adminPass) {

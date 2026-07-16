@@ -1,6 +1,6 @@
 <template>
     <div class="home">
-        <h1>欢迎使用 RelayOps</h1>
+        <h1>欢迎使用 雨梦FRPS业务管理系统</h1>
         <p>FRPS 节点管理系统</p>
     </div>
 </template>

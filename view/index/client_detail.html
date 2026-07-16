@@ -1,0 +1,124 @@
+{extend name="layout_user"}
+
+{block name="title"}产品详情 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+
+{block name="head"}
+<link rel="stylesheet" href="/themes/Console.css">
+{/block}
+
+{block name="content"}
+<div style="max-width: 700px; margin: 0 auto;">
+    <a href="/console" style="color: #409eff; font-size: 14px;">← 返回控制台</a>
+
+    <div id="detailCard" style="margin-top: 20px; background: #fff; border-radius: 10px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+        <div style="text-align:center; padding:40px; color:#999;">
+            <div style="font-size:48px; margin-bottom:16px;">⏳</div>
+            <p>加载中...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+var id = window.location.pathname.split('/').pop();
+
+fetch('/api/user/client/detail?id=' + id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.code !== 1 || !res.data) {
+            document.getElementById('detailCard').innerHTML =
+                '<div style="text-align:center; padding:60px; color:#999;">' +
+                    '<div style="font-size:48px; margin-bottom:16px;">❌</div>' +
+                    '<p>' + (res.msg || '产品不存在') + '</p>' +
+                    '<a href="/console" style="color:#409eff; margin-top:16px; display:inline-block;">返回控制台</a>' +
+                '</div>';
+            return;
+        }
+
+        var d = res.data;
+        var tagColor = {tcp:'#409eff',udp:'#e6a23c',http:'#67c23a',https:'#f56c6c'}[d.proxy_type] || '#999';
+        var statusColor = d.status == 1 ? '#67c23a' : (d.status == 2 ? '#f56c6c' : '#909399');
+        var statusBg    = d.status == 1 ? '#e8f5e9' : (d.status == 2 ? '#fde8e8' : '#f5f5f5');
+
+        var trafficHtml = '';
+        if (d.remaining_traffic === -1) {
+            trafficHtml = '<span style="color:#999;font-size:20px;font-weight:600;">不限</span>';
+        } else if (d.remaining_traffic <= 0) {
+            trafficHtml = '<span style="color:#f56c6c;font-size:20px;font-weight:600;">已用完</span>';
+        } else {
+            var remainGb = (d.remaining_traffic / 1024 / 1024 / 1024).toFixed(2);
+            trafficHtml = '<span style="color:#67c23a;font-size:20px;font-weight:600;">' + remainGb + ' GB</span>';
+        }
+
+        document.getElementById('detailCard').innerHTML =
+            '<div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">' +
+                '<h1 style="font-size:20px; margin:0;">' + (d.product_name || d.node_name || '产品') + '</h1>' +
+                '<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;color:#fff;background:' + tagColor + ';">' + d.proxy_type.toUpperCase() + '</span>' +
+                '<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;color:' + statusColor + ';background:' + statusBg + ';">' + d.status_text + '</span>' +
+            '</div>' +
+
+            // 基本信息
+            '<div style="margin-bottom:24px;">' +
+                '<h3 style="font-size:15px; color:#888; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">基本信息</h3>' +
+                '<div class="info-grid">' +
+                    '<div class="info-item">' +
+                        '<div class="label">隧道名称</div>' +
+                        '<div class="value">' + (d.node_name || '-') + '</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">连接地址</div>' +
+                        '<div class="value" style="font-family:monospace;">' + (d.connect_host || '-') + '</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">端口</div>' +
+                        '<div class="value" style="font-family:monospace;font-size:18px;font-weight:600;color:#409eff;">' + d.port + '</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">协议类型</div>' +
+                        '<div class="value">' + d.proxy_type.toUpperCase() + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            // 流量信息
+            '<div style="margin-bottom:24px;">' +
+                '<h3 style="font-size:15px; color:#888; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">流量信息</h3>' +
+                '<div class="info-grid">' +
+                    '<div class="info-item">' +
+                        '<div class="label">剩余流量</div>' +
+                        '<div class="value">' + trafficHtml + '</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">已用流量</div>' +
+                        '<div class="value" style="font-family:monospace;">' + d.traffic_used_gb.toFixed(2) + ' GB</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">流量上限</div>' +
+                        '<div class="value">' + (d.traffic_limit_gb > 0 ? d.traffic_limit_gb + ' GB' : '不限') + '</div>' +
+                    '</div>' +
+                    '<div class="info-item">' +
+                        '<div class="label">到期时间</div>' +
+                        '<div class="value" style="' + (d.is_expired ? 'color:#f56c6c;' : '') + '">' + d.expire_date + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            // 连接信息
+            '<div style="background:#f5f7fa; border-radius:8px; padding:20px; margin-bottom:24px;">' +
+                '<h3 style="font-size:15px; color:#888; margin-bottom:16px;">连接信息</h3>' +
+                '<div style="font-size:14px; line-height:2;">' +
+                    '<div style="display:flex; gap:12px;"><span style="color:#999;min-width:70px;">地址</span><code style="color:#333;font-weight:500;">' + (d.connect_host || '-') + '</code></div>' +
+                    '<div style="display:flex; gap:12px;"><span style="color:#999;min-width:70px;">端口</span><code style="color:#333;font-weight:500;">' + d.port + '</code></div>' +
+                    '<div style="display:flex; gap:12px;"><span style="color:#999;min-width:70px;">协议</span><code style="color:#333;font-weight:500;">' + d.proxy_type + '</code></div>' +
+                '</div>' +
+            '</div>' +
+
+            '<div style="text-align:center;">' +
+                '<a href="/console" style="color:#409eff; display:inline-block; padding:10px 32px; border:1px solid #409eff; border-radius:6px; font-size:14px;">返回控制台</a>' +
+            '</div>';
+    })
+    .catch(function() {
+        document.getElementById('detailCard').innerHTML =
+            '<div style="text-align:center;padding:40px;color:#f56c6c;">网络错误</div>';
+    });
+</script>
+{/block}
