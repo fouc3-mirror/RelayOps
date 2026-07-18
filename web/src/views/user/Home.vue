@@ -185,15 +185,8 @@ onMounted(async () => {
         const res = await getProducts()
         if (res.code === 1) {
             statProducts.value = res.data.length
-            products.value = res.data.slice(0, 6)
-        }
-    } catch (e) { /* ignore */ }
-
-    try {
-        const { getNodes } = await import('../../api/shop')
-        const res = await getNodes()
-        if (res.code === 1 && res.data) {
             statNodes.value = res.data.length
+            products.value = res.data.slice(0, 6)
         }
     } catch (e) { /* ignore */ }
 })
