@@ -42,13 +42,6 @@ class OrderService
             return ['ok' => false, 'msg' => '该端口已被占用'];
         }
 
-        try {
-            if (RedisService::isPortLocked($nodeId, $port)) {
-                return ['ok' => false, 'msg' => '该端口正在被其他用户购买，请稍后重试'];
-            }
-        } catch (\Throwable $e) {
-        }
-
         return ['ok' => true, 'msg' => ''];
     }
 
@@ -74,14 +67,6 @@ class OrderService
                 if (!$check['ok']) {
                     Db::rollback();
                     return ['ok' => false, 'msg' => "端口 {$port}: {$check['msg']}", 'orders' => []];
-                }
-
-                try {
-                    if (!RedisService::lockPort($nodeId, $port)) {
-                        Db::rollback();
-                        return ['ok' => false, 'msg' => "端口 {$port}: 并发冲突，请重试", 'orders' => []];
-                    }
-                } catch (\Throwable $e) {
                 }
 
                 $nodeName = Db::name('node')->where('id', $nodeId)->value('name') ?? '';
@@ -145,7 +130,7 @@ class OrderService
 
             $expireTime = time() + ($order['duration'] * 30 * 86400);
 
-            $clientId = Db::name('client')->insertGetId([
+            Db::name('client')->insertGetId([
                 'user_id'    => $order['user_id'],
                 'node_id'    => $order['node_id'],
                 'port'       => $order['port'],
@@ -159,27 +144,11 @@ class OrderService
                 'update_time' => time(),
             ]);
 
-            try {
-                RedisService::setAuth($order['node_id'], $token, $expireTime - time());
-
-                $proxyConfig = [
-                    [
-                        'type'      => $order['proxy_type'],
-                        'node_id'   => $order['node_id'],
-                        'port'      => $order['port'],
-                        'token'     => $token,
-                    ]
-                ];
-                RedisService::setClientProxies($clientId, $proxyConfig);
-            } catch (\Throwable $e) {
-                \think\facade\Log::error('Redis 写入失败: ' . $e->getMessage());
-            }
-
             Db::commit();
             return true;
         } catch (\Throwable $e) {
             Db::rollback();
-            \think\facade\Log::error('开通服务失败: ' . $e->getMessage());
+            \think\facade\Log::error('activateService failed: ' . $e->getMessage());
             return false;
         }
     }

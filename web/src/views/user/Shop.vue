@@ -14,7 +14,7 @@
             <h3>{{ product.name }}</h3>
             <el-tag size="small" :type="proxyTagType(product.proxy_type)">{{ product.proxy_type.toUpperCase() }}</el-tag>
           </div>
-          <div class="product-node">{{ product.node_name }}</div>
+          <div class="product-node">{{ product.domain || product.node_name }}</div>
           <div class="product-ports">
             端口范围：<span style="font-family:monospace;">{{ product.port_start }}-{{ product.port_end }}</span>
           </div>

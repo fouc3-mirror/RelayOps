@@ -244,7 +244,7 @@ class User extends BaseController
             ->join('node n', 'p.node_id = n.id', 'left')
             ->where('p.status', 1)
             ->where('n.status', 1)
-            ->field('p.id,p.name,p.node_id,p.proxy_type,p.port_start,p.port_end,p.price,p.duration_options,p.description,n.name as node_name,n.server_addr')
+            ->field('p.id,p.name,p.node_id,p.proxy_type,p.port_start,p.port_end,p.price,p.duration_options,p.description,n.name as node_name,n.server_addr,n.domain')
             ->order('p.sort asc, p.id asc')
             ->select()
             ->toArray();
@@ -272,7 +272,7 @@ class User extends BaseController
             ->where('p.id', $id)
             ->where('p.status', 1)
             ->where('n.status', 1)
-            ->field('p.id,p.name,p.node_id,p.proxy_type,p.port_start,p.port_end,p.price,p.duration_options,p.description,n.name as node_name,n.server_addr,n.server_port,n.port_range_start,n.port_range_end')
+            ->field('p.id,p.name,p.node_id,p.proxy_type,p.port_start,p.port_end,p.price,p.duration_options,p.description,n.name as node_name,n.server_addr,n.server_port,n.domain,n.port_range_start,n.port_range_end')
             ->find();
 
         if (!$product) {
@@ -313,6 +313,7 @@ class User extends BaseController
         if (!$userId) {
             return json(['code' => 0, 'msg' => '请先登录']);
         }
+        session_write_close();
 
         $productId = (int) $this->request->param('product_id', 0);
         $port = (int) $this->request->param('port', 0);
@@ -580,6 +581,7 @@ class User extends BaseController
 
         $userId = session('user_id');
         $cart = session('cart') ?: [];
+        session_write_close();
 
         if (empty($cart)) {
             return json(['code' => 0, 'msg' => '购物车为空']);
@@ -604,6 +606,7 @@ class User extends BaseController
         }
 
         $userId = session('user_id');
+        session_write_close();
         $order = Db::name('order')
             ->where('id', $orderId)
             ->where('user_id', $userId)
@@ -672,6 +675,33 @@ class User extends BaseController
         $order['pay_time_text'] = $order['pay_time'] ? date('Y-m-d H:i:s', $order['pay_time']) : '-';
 
         return json(['code' => 1, 'data' => $order]);
+    }
+
+    public function clients(): Response
+    {
+        $userId = session('user_id');
+        session_write_close();
+
+        $list = Db::name('client')
+            ->alias('c')
+            ->leftJoin('node n', 'c.node_id = n.id')
+            ->where('c.user_id', $userId)
+            ->where('c.status', 'in', [0, 1])
+            ->field('c.id, c.node_id, c.port, c.proxy_type, c.status, c.expire_time, c.create_time, c.traffic_used, n.name as node_name, n.server_addr, n.domain')
+            ->order('c.id', 'desc')
+            ->select()
+            ->toArray();
+
+        $now = time();
+        foreach ($list as &$item) {
+            $item['is_expired'] = ($item['expire_time'] > 0 && $item['expire_time'] < $now);
+            $item['expire_date'] = $item['expire_time'] ? date('Y-m-d', $item['expire_time']) : '-';
+            $item['status_text'] = $item['is_expired'] || $item['status'] == 2 ? '已过期' : ($item['status'] == 1 ? '运行中' : '未激活');
+            $item['connect_host'] = !empty($item['domain']) ? $item['domain'] : $item['server_addr'];
+        }
+        unset($item);
+
+        return json(['code' => 1, 'data' => $list]);
     }
 
     public function clientDetail(): Response

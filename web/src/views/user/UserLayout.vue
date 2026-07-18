@@ -2,7 +2,7 @@
     <div class="user-layout">
         <header class="user-header">
             <div class="header-left">
-                <router-link to="/" class="logo">雨梦FRPS业务管理系统</router-link>
+                <router-link to="/" class="logo">{{ siteName }}</router-link>
             </div>
             <nav class="header-nav">
                 <router-link to="/">首页</router-link>
@@ -27,7 +27,7 @@
             <router-view />
         </main>
         <footer class="user-footer">
-            <p>Copyright &copy; {{ new Date().getFullYear() }} 雨梦FRPS业务管理系统. All rights reserved.</p>
+            <p>Copyright &copy; {{ new Date().getFullYear() }} {{ siteName }}. All rights reserved.</p>
         </footer>
     </div>
 </template>
@@ -39,6 +39,7 @@ import { userLogout } from '../../api/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteName = document.title || '雨梦FRPS'
 
 async function handleLogout() {
     await userLogout()

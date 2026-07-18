@@ -5,6 +5,9 @@ return [
     'var_session_id' => '',
     'type'           => 'file',
     'store'          => null,
-    'expire'         => 1440,
+    'expire'         => 86400,
     'prefix'         => '',
 ];
+
+ini_set('session.gc_maxlifetime', 86400);
+ini_set('session.cookie_lifetime', 86400);

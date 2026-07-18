@@ -14,8 +14,8 @@
           <span class="value">{{ product.node_name }}</span>
         </div>
         <div class="meta-item">
-          <span class="label">服务器</span>
-          <span class="value">{{ product.server_addr }}:{{ product.server_port }}</span>
+          <span class="label">域名</span>
+          <span class="value">{{ product.domain || product.server_addr }}</span>
         </div>
         <div class="meta-item">
           <span class="label">端口范围</span>

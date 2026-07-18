@@ -188,14 +188,6 @@ INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `cre
 ('pay', 'epay_pid', '', 'text', '易支付商户ID', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('pay', 'epay_key', '', 'text', '易支付商户密钥', UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- Redis 配置
-INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `create_time`, `update_time`) VALUES
-('redis', 'redis_host', '127.0.0.1', 'text', 'Redis服务器地址', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('redis', 'redis_port', '6379', 'number', 'Redis端口', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('redis', 'redis_password', '', 'text', 'Redis密码', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('redis', 'redis_select', '0', 'number', 'Redis数据库编号', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('redis', 'redis_prefix', 'frp:', 'text', 'Redis Key前缀', UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
 -- --------------------------------------------------------
 -- 商品表
 -- --------------------------------------------------------

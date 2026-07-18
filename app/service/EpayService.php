@@ -9,15 +9,12 @@ class EpayService
 {
     protected static function getConfig(): array
     {
-        $fields = ['epay_url', 'epay_pid', 'epay_key'];
-        $config = [];
-
-        foreach ($fields as $field) {
-            $row = Db::name('setting')->where('name', $field)->find();
-            $config[$field] = $row['value'] ?? '';
-        }
-
-        return $config;
+        $rows = Db::name('setting')->whereIn('name', ['epay_url', 'epay_pid', 'epay_key'])->column('value', 'name');
+        return [
+            'epay_url' => $rows['epay_url'] ?? '',
+            'epay_pid' => $rows['epay_pid'] ?? '',
+            'epay_key' => $rows['epay_key'] ?? '',
+        ];
     }
 
     public static function createPayment(string $orderNo, float $amount, string $subject, string $payType = 'alipay'): array

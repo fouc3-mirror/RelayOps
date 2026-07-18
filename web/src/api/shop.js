@@ -51,3 +51,11 @@ export function getOrderDetail(orderId) {
 export function getOrders() {
   return http.get('/api/user/orders')
 }
+
+export function getClients() {
+  return http.get('/api/user/clients')
+}
+
+export function getClientDetail(id) {
+  return http.get('/api/user/client/detail', { params: { id } })
+}

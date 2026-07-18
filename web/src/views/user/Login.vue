@@ -1,21 +1,19 @@
 <template>
     <div class="login-page">
         <div class="login-card">
-            <h2>雨梦FRPS业务管理系统</h2>
+            <h2>{{ siteName }}</h2>
             <p class="sub">用户登录</p>
-            <el-form :model="form" @submit.prevent="handleLogin">
-                <el-form-item>
-                    <el-input v-model="form.username" placeholder="用户名" prefix-icon="User" size="large" />
-                </el-form-item>
-                <el-form-item>
-                    <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password />
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" :loading="loading" @click="handleLogin" size="large" style="width:100%">登 录</el-button>
-                </el-form-item>
-            </el-form>
+            <div style="margin-bottom:20px;">
+                <el-input v-model="form.username" placeholder="用户名" prefix-icon="User" size="large" @keyup.enter="handleLogin" />
+            </div>
+            <div style="margin-bottom:20px;">
+                <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password @keyup.enter="handleLogin" />
+            </div>
+            <div>
+                <el-button type="primary" :loading="loading" @click="handleLogin" size="large" style="width:100%">登 录</el-button>
+            </div>
             <div class="links">
-                <router-link to="/">← 返回首页</router-link>
+                <router-link to="/">返回首页</router-link>
             </div>
         </div>
     </div>
@@ -30,6 +28,7 @@ import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteName = document.title || '雨梦FRPS'
 const loading = ref(false)
 const form = reactive({ username: '', password: '' })
 

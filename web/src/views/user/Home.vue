@@ -5,7 +5,7 @@
             <div class="hero-inner">
                 <div class="hero-text">
                     <div class="hero-eyebrow">轻量级 FRPS 节点管理平台</div>
-                    <h1>雨梦FRPS<br>业务管理系统</h1>
+                    <h1>{{ siteName }}</h1>
                     <p>高性能反向代理节点集中管控，多节点智能调度、实时流量监控、安全鉴权分离——让您的 FRPS 基础设施安全、稳定、高效运行</p>
                     <div class="hero-actions">
                         <template v-if="userStore.userInfo">
@@ -106,7 +106,7 @@
                         <div class="product-panel-top">
                             <span class="ptype" :class="p.proxy_type">{{ p.proxy_type.toUpperCase() }}</span>
                             <h4>{{ p.name }}</h4>
-                            <div class="sub">{{ p.node_name }}</div>
+                            <div class="sub">{{ p.domain || p.node_name }}</div>
                             <div class="specs">
                                 <div class="spec">端口 <strong>{{ p.port_start }}-{{ p.port_end }}</strong></div>
                                 <div class="spec">可选 <strong>{{ (p.durations || [1]).join('/') }} 月</strong></div>
@@ -175,6 +175,7 @@ import { useUserStore } from '../../stores/user'
 import { getProducts } from '../../api/shop'
 
 const userStore = useUserStore()
+const siteName = document.title || '雨梦FRPS'
 
 const statNodes = ref('--')
 const statProducts = ref('--')

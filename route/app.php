@@ -50,6 +50,7 @@ Route::group('api/user', function () {
     Route::get('order/:id/pay', 'api.User/orderPay');
     Route::get('order/:id', 'api.User/orderDetail');
     Route::get('orders', 'api.User/orderList');
+    Route::get('clients', 'api.User/clients');
     Route::get('client/detail', 'api.User/clientDetail');
 })->middleware(\app\middleware\Cors::class)
   ->middleware(\app\middleware\UserAuth::class);

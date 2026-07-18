@@ -1,20 +1,18 @@
 <template>
     <div class="login-container">
         <div class="login-card">
-            <h2>雨梦FRPS业务管理系统 管理后台</h2>
-            <el-form :model="form" @submit.prevent="handleLogin" label-width="0">
-                <el-form-item>
-                    <el-input v-model="form.username" placeholder="管理员账号" prefix-icon="User" size="large" />
-                </el-form-item>
-                <el-form-item>
-                    <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password />
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" :loading="loading" @click="handleLogin" size="large" style="width:100%">
-                        登 录
-                    </el-button>
-                </el-form-item>
-            </el-form>
+            <h2>{{ siteName }} 管理后台</h2>
+            <div style="margin-bottom:20px;">
+                <el-input v-model="form.username" placeholder="管理员账号" prefix-icon="User" size="large" @keyup.enter="handleLogin" />
+            </div>
+            <div style="margin-bottom:20px;">
+                <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password @keyup.enter="handleLogin" />
+            </div>
+            <div>
+                <el-button type="primary" :loading="loading" @click="handleLogin" size="large" style="width:100%">
+                    登 录
+                </el-button>
+            </div>
         </div>
     </div>
 </template>
@@ -24,10 +22,9 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { adminLogin } from '../../api/admin'
-import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
-const userStore = useUserStore()
+const siteName = document.title || 'Admin'
 const loading = ref(false)
 const form = reactive({ username: '', password: '' })
 
@@ -40,7 +37,6 @@ async function handleLogin() {
     try {
         const res = await adminLogin(form)
         if (res.code === 1) {
-            userStore.setInfo(res.data)
             ElMessage.success('登录成功')
             router.push('/admin')
         } else {
