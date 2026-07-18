@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{block name="title"}管理后台 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}</title>
+    <title>{block name="title"}管理后台 - {$site.site_name ?? '雨梦FRPS多节点管理系统'}{/block}</title>
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,7 +12,6 @@
 
         .layout { display: flex; min-height: 100vh; }
 
-        /* 侧边栏 */
         .sidebar { width: 220px; background: #1d1e2c; color: #fff; display: flex; flex-direction: column; }
         .sidebar-logo { padding: 20px 24px; font-size: 18px; font-weight: 700; color: #409eff; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .sidebar-menu { flex: 1; padding: 12px 0; }
@@ -21,7 +20,6 @@
         .sidebar-menu a.active { background: #409eff; color: #fff; }
         .sidebar-menu a span.icon { font-size: 18px; width: 24px; text-align: center; }
 
-        /* 主区域 */
         .content { flex: 1; display: flex; flex-direction: column; }
         .header { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 56px; background: #fff; border-bottom: 1px solid #eee; }
         .header-title { font-size: 16px; font-weight: 500; }
@@ -51,7 +49,7 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></div>
+            <div class="sidebar-logo"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?>" style="height: 28px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?><?php endif; ?></div>
             <nav class="sidebar-menu">
                 <a href="/admin/dashboard" class="{if $active == 'dashboard'}active{/if}">
                     <span class="icon"></span> 仪表盘

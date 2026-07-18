@@ -1,6 +1,4 @@
 <?php
-// 一次性迁移脚本：添加 traffic_limit 列到 RO_product 表
-// 访问一次后删除
 
 $host = '127.0.0.1';
 $port = 3306;

@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}系统设置 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+{block name="title"}系统设置 - {$site.site_name ?? '雨梦FRPS多节点管理系统'}{/block}
 {block name="header-title"}系统设置{/block}
 
 {block name="style"}
@@ -31,7 +31,6 @@
 
 {block name="content"}
 <div class="card">
-    <!-- 分类标签 -->
     <div class="tab-bar">
         <div class="tab-item active" onclick="switchTab('basic')">基本设置</div>
         <div class="tab-item" onclick="switchTab('system')">系统信息</div>
@@ -39,7 +38,6 @@
         <div class="tab-item" onclick="switchTab('pay')">支付配置</div>
     </div>
 
-    <!-- 基本设置 -->
     <div id="tab-basic" class="tab-panel active">
         <form onsubmit="return false;">
             <div class="form-row">
@@ -90,7 +88,6 @@
         </form>
     </div>
 
-    <!-- 系统信息 -->
     <div id="tab-system" class="tab-panel">
         <form onsubmit="return false;">
             <div class="form-row">
@@ -117,7 +114,6 @@
         </form>
     </div>
 
-    <!-- 邮件配置 -->
     <div id="tab-email" class="tab-panel">
         <form onsubmit="return false;">
             <div class="form-row">
@@ -149,7 +145,7 @@
                 </div>
                 <div class="form-group">
                     <label>发件人名称</label>
-                    <input type="text" data-name="smtp_name" value="{$settings.email.smtp_name ?? '雨梦FRPS业务管理系统'}">
+                    <input type="text" data-name="smtp_name" value="{$settings.email.smtp_name ?? '雨梦FRPS多节点管理系统'}">
                 </div>
             </div>
             <div class="form-row">
@@ -173,7 +169,6 @@
         </form>
     </div>
 
-    <!-- 支付配置 -->
     <div id="tab-pay" class="tab-panel">
         <form onsubmit="return false;">
             <div class="form-row single">
@@ -282,7 +277,7 @@ async function testPay() {
         var json = await res.json();
         if (json.code === 0 && json.data && json.data.url) {
             msg.style.color = '#388e3c';
-            msg.innerHTML = '测试订单已生成，<a href="' + json.data.url + '" target="_blank" style="color:#388e3c;font-weight:bold;">点击支付测试 (1元)</a>';
+            msg.innerHTML = '测试订单已生成，<a href="' + json.data.url + '" target="_blank" style="color:
         } else {
             msg.style.color = '#f56c6c';
             msg.textContent = json.msg || '支付测试失败';

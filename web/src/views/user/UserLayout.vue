@@ -93,7 +93,6 @@ async function handleLogout() {
 
 .user-main {
     flex: 1;
-    /* NO padding — each page controls its own */
 }
 
 .user-footer {

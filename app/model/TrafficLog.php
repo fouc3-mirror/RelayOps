@@ -5,25 +5,13 @@ namespace app\model;
 
 use think\Model;
 
-/**
- * 流量明细模型
- *
- * @property int $id
- * @property int $node_id
- * @property int $user_id
- * @property string $proxy_name
- * @property int $in_bytes
- * @property int $out_bytes
- * @property int $record_time  记录时间（分钟级时间戳）
- * @property int $create_time
- */
 class TrafficLog extends Model
 {
     protected $name = 'traffic_log';
 
     protected $autoWriteTimestamp = true;
     protected $createTime = 'create_time';
-    protected $updateTime = false; // 流量记录不需要更新时间
+    protected $updateTime = false;
 
     protected $type = [
         'id'          => 'integer',
@@ -35,12 +23,6 @@ class TrafficLog extends Model
         'create_time' => 'integer',
     ];
 
-    /**
-     * 批量写入流量明细（事务保护）
-     *
-     * @param int   $nodeId
-     * @param array $items  [['user_id' => 1, 'proxy_name' => 'tcp', 'in_bytes' => ..., 'out_bytes' => ..., 'record_time' => ...], ...]
-     */
     public static function batchInsert(int $nodeId, array $items): bool
     {
         $rows = [];

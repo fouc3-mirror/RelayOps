@@ -90,7 +90,6 @@ async function handleClear() {
 async function handleCheckout() {
   checking.value = true
   try {
-    // 1. 创建订单
     const res = await orderCreate()
     if (res.code !== 1) {
       ElMessage.error(res.msg || '创建订单失败')
@@ -103,7 +102,6 @@ async function handleCheckout() {
       return
     }
 
-    // 2. 如果只有一个订单，直接跳转支付
     if (orders.length === 1) {
       const payRes = await orderPay(orders[0].id)
       if (payRes.code === 1 && payRes.url) {
@@ -112,7 +110,6 @@ async function handleCheckout() {
         ElMessage.error(payRes.msg || '获取支付链接失败')
       }
     } else {
-      // 多个订单跳转订单列表
       ElMessage.success(`已创建 ${orders.length} 个订单`)
       router.push('/console/orders')
     }

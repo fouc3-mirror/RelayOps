@@ -5,7 +5,6 @@ const http = axios.create({
     timeout: 10000,
 })
 
-// 响应拦截器：401 且是 /api/admin 接口 → 跳转管理员登录
 http.interceptors.response.use(
     res => res.data,
     err => {

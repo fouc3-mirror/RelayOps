@@ -7,17 +7,8 @@ use app\BaseController;
 use think\facade\Db;
 use think\Response;
 
-/**
- * 数据库迁移工具
- *
- * 访问 /migrate 执行已部署系统的数据库变更
- * 用于将旧数据库升级到新的结构（新增 traffic_log 表、新字段等）
- */
 class Migrate extends BaseController
 {
-    /**
-     * 迁移页面
-     */
     public function index(): Response
     {
         $html = <<<HTML
@@ -25,7 +16,7 @@ class Migrate extends BaseController
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>数据库迁移 - 雨梦FRPS业务管理系统</title>
+    <title>数据库迁移 - 雨梦FRPS多节点管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -158,9 +149,6 @@ HTML;
         return \think\Response::create($html, 'html');
     }
 
-    /**
-     * 预览迁移 SQL
-     */
     public function preview(): Response
     {
         $sqls = $this->buildMigrationSql();
@@ -174,9 +162,6 @@ HTML;
         ]);
     }
 
-    /**
-     * 执行迁移
-     */
     public function execute(): Response
     {
         $sqls = $this->buildMigrationSql();
@@ -195,19 +180,14 @@ HTML;
         }
     }
 
-    /**
-     * 生成迁移 SQL（仅生成表尚不存在的语句）
-     */
     private function buildMigrationSql(): array
     {
         $prefix = env('DB_PREFIX', 'RO_');
         $sqls   = [];
 
-        // 获取当前已有表
         $tables = Db::query("SHOW TABLES");
         $tableNames = array_column($tables, "Tables_in_" . env('DB_NAME', 'relayops'));
 
-        // 1. RO_node — 新增字段
         if (in_array("{$prefix}node", $tableNames)) {
             if (!$this->columnExists("{$prefix}node", 'online_count')) {
                 $sqls[] = "ALTER TABLE `{$prefix}node` ADD COLUMN `online_count` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前在线客户端数' AFTER `last_heartbeat`";
@@ -220,14 +200,12 @@ HTML;
             }
         }
 
-        // 2. RO_user — 新增带宽限制
         if (in_array("{$prefix}user", $tableNames)) {
             if (!$this->columnExists("{$prefix}user", 'bandwidth_limit')) {
                 $sqls[] = "ALTER TABLE `{$prefix}user` ADD COLUMN `bandwidth_limit` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '带宽限制（字节/秒），0=不限' AFTER `status`";
             }
         }
 
-        // 3. RO_client — 新增字段
         if (in_array("{$prefix}client", $tableNames)) {
             if (!$this->columnExists("{$prefix}client", 'proxy_name')) {
                 $sqls[] = "ALTER TABLE `{$prefix}client` ADD COLUMN `proxy_name` varchar(100) NOT NULL DEFAULT '' COMMENT '代理名称（如 tcp_8080）' AFTER `token`";
@@ -240,21 +218,18 @@ HTML;
             }
         }
 
-        // 3b. RO_product — 新增流量限制
         if (in_array("{$prefix}product", $tableNames)) {
             if (!$this->columnExists("{$prefix}product", 'traffic_limit')) {
                 $sqls[] = "ALTER TABLE `{$prefix}product` ADD COLUMN `traffic_limit` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '流量限制（字节），0=不限' AFTER `sort`";
             }
         }
 
-        // 3c. RO_client — 新增已使用流量
         if (in_array("{$prefix}client", $tableNames)) {
             if (!$this->columnExists("{$prefix}client", 'traffic_used')) {
                 $sqls[] = "ALTER TABLE `{$prefix}client` ADD COLUMN `traffic_used` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '已使用流量（字节）' AFTER `status`";
             }
         }
 
-        // 4. RO_traffic_log — 新建表
         if (!in_array("{$prefix}traffic_log", $tableNames)) {
             $sqls[] = <<<SQL
 CREATE TABLE IF NOT EXISTS `{$prefix}traffic_log` (
@@ -278,9 +253,6 @@ SQL;
         return $sqls;
     }
 
-    /**
-     * 检查表中是否存在某列
-     */
     private function columnExists(string $table, string $column): bool
     {
         try {
@@ -291,9 +263,6 @@ SQL;
         }
     }
 
-    /**
-     * 检查表中是否存在某索引
-     */
     private function indexExists(string $table, string $index): bool
     {
         try {

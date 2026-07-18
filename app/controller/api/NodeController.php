@@ -11,20 +11,8 @@ use app\model\TrafficLog;
 use think\facade\Db;
 use think\Response;
 
-/**
- * FRPS 节点通信控制器
- *
- * 所有接口由 FRPS 节点通过 HTTP 调用，需 Bearer token 鉴权
- */
 class NodeController extends BaseController
 {
-    /**
-     * GET /api/node/user?token=xxx
-     *
-     * 校验用户 token，返回用户信息
-     *
-     * @return Response
-     */
     public function user(): Response
     {
         $token = trim($this->request->param('token', ''));
@@ -33,27 +21,22 @@ class NodeController extends BaseController
             return json(['code' => 0, 'msg' => '参数错误']);
         }
 
-        // 在 RO_client 表中查找 token 对应的客户端记录
         $client = UserNode::where('token', $token)->find();
 
         if (!$client) {
             return json(['code' => 0, 'msg' => 'token 无效']);
         }
 
-        // 检测流量是否耗尽
         $trafficLimit    = (int) ($client->traffic_limit ?? 0);
         $trafficUsed     = (int) ($client->traffic_used ?? 0);
         $trafficExhausted = ($trafficLimit > 0 && $trafficUsed >= $trafficLimit);
 
-        // 流量耗尽时自动停用隧道
         if ($trafficExhausted && $client->status === 1) {
             $client->save(['status' => 0]);
             $client->status = 0;
         }
 
-        // 检查隧道是否过期
         if ($client->status === 2 || ($client->expire_time > 0 && $client->expire_time < time())) {
-            // 自动标记为过期
             if ($client->status !== 2) {
                 $client->save(['status' => 2]);
             }
@@ -64,7 +47,6 @@ class NodeController extends BaseController
             return json(['code' => 0, 'msg' => '隧道未启用']);
         }
 
-        // 查找用户
         $user = User::find($client->user_id);
 
         if (!$user || $user->status !== 1) {
@@ -89,16 +71,8 @@ class NodeController extends BaseController
         ]);
     }
 
-    /**
-     * GET /api/node/can-create-proxy
-     *
-     * 检查当前节点是否允许新建隧道
-     *
-     * @return Response
-     */
     public function canCreateProxy(): Response
     {
-        /** @var Node $node */
         $node = $this->request->node;
 
         $allowed = $node->canCreateProxy();
@@ -115,24 +89,8 @@ class NodeController extends BaseController
         ]);
     }
 
-    /**
-     * POST /api/node/traffic
-     *
-     * 接收节点上报的批量流量数据，写入 traffic_log 表
-     *
-     * 请求体格式：
-     * {
-     *     "items": [
-     *         {"user_id": 1, "proxy_name": "tcp_8080", "in": 1024, "out": 2048},
-     *         {"user_id": 2, "proxy_name": "http_80", "in": 512, "out": 256}
-     *     ]
-     * }
-     *
-     * @return Response
-     */
     public function traffic(): Response
     {
-        /** @var Node $node */
         $node  = $this->request->node;
         $items = $this->request->param('items', []);
 
@@ -140,12 +98,10 @@ class NodeController extends BaseController
             return json(['code' => 0, 'msg' => '请求数据为空']);
         }
 
-        // 限制单次批量大小，防止恶意超大请求
         if (count($items) > 500) {
             return json(['code' => 0, 'msg' => '单次提交数据不能超过 500 条']);
         }
 
-        // 事务写入流量明细
         Db::startTrans();
         try {
             $insertData = [];
@@ -161,7 +117,6 @@ class NodeController extends BaseController
                     continue;
                 }
 
-                // 取整到分钟的时间戳，用于聚合
                 $recordTime = $now - ($now % 60);
 
                 $totalBytes   = $inBytes + $outBytes;
@@ -175,7 +130,6 @@ class NodeController extends BaseController
                     'create_time' => $now,
                 ];
 
-                // 扣除对应 client 的流量
                 if ($totalBytes > 0) {
                     $client = UserNode::where('user_id', $userId)
                         ->where('node_id', $node->id)
@@ -189,7 +143,6 @@ class NodeController extends BaseController
                             ->inc('traffic_used', $totalBytes)
                             ->update();
 
-                        // 流量耗尽：停用隧道 + 禁用用户
                         $trafficLimit    = (int) ($client->traffic_limit ?? 0);
                         $trafficUsedAfter = (int) ($client->traffic_used ?? 0) + $totalBytes;
                         if ($trafficLimit > 0 && $trafficUsedAfter >= $trafficLimit) {
@@ -211,7 +164,6 @@ class NodeController extends BaseController
                 return json(['code' => 0, 'msg' => '无有效数据']);
             }
 
-            // 批量插入
             (new TrafficLog())->saveAll($insertData);
 
             Db::commit();
@@ -229,21 +181,8 @@ class NodeController extends BaseController
         }
     }
 
-    /**
-     * POST /api/node/heartbeat
-     *
-     * 接收节点心跳，更新在线数和心跳时间
-     *
-     * 请求体格式：
-     * {
-     *     "online_count": 5
-     * }
-     *
-     * @return Response
-     */
     public function heartbeat(): Response
     {
-        /** @var Node $node */
         $node        = $this->request->node;
         $onlineCount = (int) $this->request->param('online_count', 0);
 

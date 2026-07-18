@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}节点管理 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+{block name="title"}节点管理 - {$site.site_name ?? '雨梦FRPS多节点管理系统'}{/block}
 {block name="header-title"}节点管理{/block}
 
 {block name="content"}
@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
         <span>FRPS 节点列表</span>
-        <a href="javascript:;" onclick="showAddModal()" style="padding:6px 16px; background:#409eff; color:#fff; border-radius:4px; font-size:13px;">+ 添加节点</a>
+        <a href="javascript:;" onclick="showAddModal()" style="padding:6px 16px; background:
     </div>
     <table>
         <thead>
@@ -25,12 +25,11 @@
             </tr>
         </thead>
         <tbody id="nodeList">
-            <tr><td colspan="9" style="text-align:center; color:#999; padding:40px;">加载中...</td></tr>
+            <tr><td colspan="9" style="text-align:center; color:
         </tbody>
     </table>
 </div>
 
-<!-- 添加/编辑节点模态框 -->
 <div id="nodeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:8px; padding:24px; width:600px; max-height:90vh; overflow-y:auto;">
         <h3 id="modalTitle" style="margin:0 0 20px 0; font-size:18px;">添加节点</h3>
@@ -120,15 +119,14 @@
             </div>
 
             <div style="display:flex; gap:12px; justify-content:flex-end;">
-                <button type="button" onclick="closeModal()" style="padding:8px 20px; border:1px solid #dcdfe6; border-radius:4px; font-size:14px; cursor:pointer; background:#fff;">取消</button>
-                <button type="submit" style="padding:8px 20px; background:#409eff; color:#fff; border:none; border-radius:4px; font-size:14px; cursor:pointer;">保存</button>
+                <button type="button" onclick="closeModal()" style="padding:8px 20px; border:1px solid
+                <button type="submit" style="padding:8px 20px; background:
             </div>
         </form>
     </div>
 </div>
 
 <script>
-// 加载节点列表
 function loadNodes() {
     fetch('/api/admin/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(r) { return r.json(); })
@@ -136,7 +134,7 @@ function loadNodes() {
             var list = res.data || [];
             var tbody = document.getElementById('nodeList');
             if (!list.length) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999; padding:40px;">暂无节点</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:
                 return;
             }
             tbody.innerHTML = list.map(function(n) {
@@ -150,19 +148,18 @@ function loadNodes() {
                     '<td><span class="tag ' + (n.status == 1 ? 'tag-green' : 'tag-red') + '">' + (n.status == 1 ? '正常' : '禁用') + '</span></td>' +
                     '<td>' + (n.last_heartbeat ? new Date(n.last_heartbeat * 1000).toLocaleString() : '无') + '</td>' +
                     '<td>' +
-                        '<a href="javascript:;" onclick="editNode(' + n.id + ')" style="color:#409eff; margin-right:8px;">编辑</a>' +
-                        '<a href="javascript:;" onclick="toggleNode(' + n.id + ')" style="color:#e6a23c; margin-right:8px;">' + (n.status == 1 ? '禁用' : '启用') + '</a>' +
-                        '<a href="javascript:;" onclick="deleteNode(' + n.id + ')" style="color:#f56c6c;">删除</a>' +
+                        '<a href="javascript:;" onclick="editNode(' + n.id + ')" style="color:
+                        '<a href="javascript:;" onclick="toggleNode(' + n.id + ')" style="color:
+                        '<a href="javascript:;" onclick="deleteNode(' + n.id + ')" style="color:
                     '</td>' +
                 '</tr>';
             }).join('');
         })
         .catch(function() {
-            document.getElementById('nodeList').innerHTML = '<tr><td colspan="9" style="text-align:center; color:#f56c6c; padding:40px;">加载失败</td></tr>';
+            document.getElementById('nodeList').innerHTML = '<tr><td colspan="9" style="text-align:center; color:
         });
 }
 
-// 显示添加模态框
 function showAddModal() {
     document.getElementById('modalTitle').textContent = '添加节点';
     document.getElementById('nodeId').value = '0';
@@ -175,7 +172,6 @@ function showAddModal() {
     document.getElementById('nodeModal').style.display = 'flex';
 }
 
-// 编辑节点
 function editNode(id) {
     fetch('/api/admin/node/detail?id=' + id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(r) { return r.json(); })
@@ -205,12 +201,10 @@ function editNode(id) {
         });
 }
 
-// 关闭模态框
 function closeModal() {
     document.getElementById('nodeModal').style.display = 'none';
 }
 
-// 保存节点
 document.getElementById('nodeForm').addEventListener('submit', function(e) {
     e.preventDefault();
     var data = {
@@ -251,7 +245,6 @@ document.getElementById('nodeForm').addEventListener('submit', function(e) {
     });
 });
 
-// 切换节点状态
 function toggleNode(id) {
     if (!confirm('确定切换节点状态？')) return;
 
@@ -271,7 +264,6 @@ function toggleNode(id) {
     });
 }
 
-// 删除节点
 function deleteNode(id) {
     if (!confirm('确定删除该节点？此操作不可恢复！')) return;
 
@@ -291,7 +283,6 @@ function deleteNode(id) {
     });
 }
 
-// 页面加载时获取节点列表
 loadNodes();
 </script>
 {/block}

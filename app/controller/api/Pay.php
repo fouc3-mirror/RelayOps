@@ -8,21 +8,14 @@ use think\facade\Db;
 use think\facade\Log;
 use think\Response;
 
-/**
- * 支付回调控制器（易支付）
- */
 class Pay extends BaseController
 {
-    /**
-     * 异步通知回调（易支付 POST 调用）
-     */
     public function notify(): Response
     {
         $params = $this->request->param();
 
         Log::info('支付回调收到: ' . json_encode($params));
 
-        // 1. 验证签名
         if (!\app\service\EpayService::verifyNotify($params)) {
             Log::warning('支付回调签名验证失败');
             return Response::create('sign error', 'html')->code(200);
@@ -32,13 +25,11 @@ class Pay extends BaseController
         $orderNo = $params['out_trade_no'] ?? '';
         $tradeNo = $params['trade_no'] ?? '';
 
-        // 2. 检查交易状态
         if ($tradeStatus !== 'TRADE_SUCCESS') {
             Log::info("支付回调状态非成功: {$tradeStatus}");
             return Response::create('fail', 'html')->code(200);
         }
 
-        // 3. 查找订单
         $order = Db::name('order')
             ->where('order_no', $orderNo)
             ->where('status', 0)
@@ -49,7 +40,6 @@ class Pay extends BaseController
             return Response::create('success', 'html')->code(200);
         }
 
-        // 4. 金额校验（防止篡改）
         $paidAmount = (float) ($params['money'] ?? 0);
         $orderAmount = (float) $order['amount'];
         if (abs($paidAmount - $orderAmount) > 0.01) {
@@ -57,7 +47,6 @@ class Pay extends BaseController
             return Response::create('fail', 'html')->code(200);
         }
 
-        // 5. 开通服务
         $activated = \app\service\OrderService::activateService($order['id'], $tradeNo);
 
         if ($activated) {
@@ -69,9 +58,6 @@ class Pay extends BaseController
         return Response::create('fail', 'html')->code(200);
     }
 
-    /**
-     * 同步跳转回调（支付完成后浏览器跳转）
-     */
     public function returnPage(): Response
     {
         $params = $this->request->param();

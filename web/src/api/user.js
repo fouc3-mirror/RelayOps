@@ -6,7 +6,6 @@ const http = axios.create({
     withCredentials: true,
 })
 
-// 响应拦截器：401 且是 /api/user 接口 → 跳转用户登录
 http.interceptors.response.use(
     res => res.data,
     err => {

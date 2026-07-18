@@ -1,6 +1,6 @@
 {extend name="layout"}
 
-{block name="title"}数据库配置 - 雨梦FRPS业务管理系统安装向导{/block}
+{block name="title"}数据库配置 - 雨梦FRPS多节点管理系统安装向导{/block}
 
 {block name="content"}
 <div class="install-steps">
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<h2 style="margin-bottom: 20px; color: #333;">数据库配置</h2>
+<h2 style="margin-bottom: 20px; color:
 
 <div id="loading" class="loading">
     <div class="spinner"></div>
@@ -102,7 +102,6 @@
         var form = document.getElementById('dbForm');
         var formData = new FormData(form);
 
-        // 保存数据到 sessionStorage
         sessionStorage.setItem('db_host', formData.get('db_host'));
         sessionStorage.setItem('db_port', formData.get('db_port'));
         sessionStorage.setItem('db_name', formData.get('db_name'));

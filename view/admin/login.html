@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员登录 - {$site.site_name ?? '雨梦FRPS业务管理系统'}</title>
+    <title>管理员登录 - {$site.site_name ?? '雨梦FRPS多节点管理系统'}</title>
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,7 +22,6 @@
         .back-link a { color: #999; font-size: 13px; text-decoration: none; }
         .back-link a:hover { color: #409eff; }
 
-        /* 忘记密码 */
         .forgot-link { text-align: right; margin-bottom: 12px; }
         .forgot-link a { font-size: 13px; color: #909399; text-decoration: none; }
         .forgot-link a:hover { color: #409eff; }
@@ -39,7 +38,7 @@
 </head>
 <body>
     <div class="login-wrapper">
-        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?></h2>
+        <h2><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?>" style="height: 36px; vertical-align: middle; margin-right: 8px;"><?php endif; ?> <?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?></h2>
         <div class="sub">管理员登录</div>
         <form onsubmit="return handleLogin(event)">
             <div class="form-group">
@@ -55,7 +54,6 @@
         <div class="forgot-link"><a href="javascript:void(0)" onclick="showForgotPassword()">忘记密码？</a></div>
         <div class="form-tip" id="msg"></div>
 
-        <!-- 忘记密码 -->
         <div id="forgotPassword" class="forgot-password">
             <div class="fp-title">管理员找回密码</div>
             <div id="fpStep1" class="fp-step active">
@@ -126,7 +124,7 @@
         var resendBtn = document.getElementById('fpResendBtn');
         var msg = document.getElementById('fpMsg');
 
-        if (!username) { msg.style.color = '#f56c6c'; msg.textContent = '请输入管理员账号'; return; }
+        if (!username) { msg.style.color = '
 
         if (btn) { btn.disabled = true; btn.textContent = '发送中...'; }
         if (resendBtn) { resendBtn.disabled = true; resendBtn.textContent = '发送中...'; }
@@ -166,7 +164,7 @@
                 if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = '重新发送'; }
             }
         } catch(err) {
-            msg.style.color = '#f56c6c'; msg.textContent = '网络错误，请重试';
+            msg.style.color = '
             if (btn) { btn.disabled = false; btn.textContent = '发送验证码'; }
             if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = '重新发送'; }
         }
@@ -180,9 +178,9 @@
         var btn = document.getElementById('fpResetBtn');
         var msg = document.getElementById('fpMsg');
 
-        if (!code) { msg.style.color = '#f56c6c'; msg.textContent = '请输入验证码'; return; }
-        if (password.length < 6) { msg.style.color = '#f56c6c'; msg.textContent = '密码至少需要6位'; return; }
-        if (password !== password2) { msg.style.color = '#f56c6c'; msg.textContent = '两次输入的密码不一致'; return; }
+        if (!code) { msg.style.color = '
+        if (password.length < 6) { msg.style.color = '
+        if (password !== password2) { msg.style.color = '
 
         btn.disabled = true; btn.textContent = '重置中...';
         msg.style.color = '#999'; msg.textContent = '';
@@ -206,7 +204,7 @@
                 msg.textContent = json.msg || '重置失败';
             }
         } catch(err) {
-            msg.style.color = '#f56c6c'; msg.textContent = '网络错误，请重试';
+            msg.style.color = '
         } finally {
             btn.disabled = false; btn.textContent = '重置密码';
         }

@@ -1,6 +1,4 @@
 <?php
-// 临时修复脚本：添加 domain 列到 RO_node 表
-// 访问一次本文件即可，完成后建议删除
 
 $host = '127.0.0.1';
 $port = 3306;
@@ -13,7 +11,6 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
 
-    // 检查列是否已存在
     $stmt = $pdo->query("SHOW COLUMNS FROM `RO_node` LIKE 'domain'");
     if ($stmt->fetch()) {
         echo "✓ domain 列已存在，无需操作";

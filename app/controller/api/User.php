@@ -9,9 +9,6 @@ use think\Response;
 
 class User extends BaseController
 {
-    /**
-     * 发送邮箱验证码
-     */
     public function sendVerify(): Response
     {
         if (!$this->request->isPost()) {
@@ -29,7 +26,6 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '邮箱格式不正确']);
         }
 
-        // 找回密码场景：检查邮箱是否已注册
         if ($scene === 'reset') {
             $user = Db::name('user')->where('email', $email)->find();
             if (!$user) {
@@ -37,7 +33,6 @@ class User extends BaseController
             }
         }
 
-        // 检查发送频率（60秒内不能重复发送）
         $lastSend = Db::name('email_verify')
             ->where('email', $email)
             ->where('scene', $scene)
@@ -54,9 +49,6 @@ class User extends BaseController
         return json($result);
     }
 
-    /**
-     * 用户重置密码
-     */
     public function resetPassword(): Response
     {
         if (!$this->request->isPost()) {
@@ -84,18 +76,15 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '两次输入的密码不一致']);
         }
 
-        // 检查邮箱是否已注册
         $user = Db::name('user')->where('email', $email)->find();
         if (!$user) {
             return json(['code' => 0, 'msg' => '该邮箱未注册']);
         }
 
-        // 验证邮箱验证码
         if (!\app\service\Mail::verifyCode($email, $code, 'reset')) {
             return json(['code' => 0, 'msg' => '验证码错误或已过期']);
         }
 
-        // 更新密码
         $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
         Db::name('user')
             ->where('id', $user['id'])
@@ -107,9 +96,6 @@ class User extends BaseController
         return json(['code' => 1, 'msg' => '密码重置成功，请使用新密码登录']);
     }
 
-    /**
-     * 用户注册
-     */
     public function register(): Response
     {
         if (!$this->request->isPost()) {
@@ -122,7 +108,6 @@ class User extends BaseController
         $email = trim($this->request->param('email', ''));
         $verifyCode = trim($this->request->param('verify_code', ''));
 
-        // 参数验证
         if (empty($username) || empty($password)) {
             return json(['code' => 0, 'msg' => '用户名和密码不能为空']);
         }
@@ -151,24 +136,20 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '请输入验证码']);
         }
 
-        // 验证邮箱验证码
         if (!\app\service\Mail::verifyCode($email, $verifyCode, 'register')) {
             return json(['code' => 0, 'msg' => '验证码无效或已过期']);
         }
 
-        // 检查用户名是否已存在
         $exists = Db::name('user')->where('username', $username)->find();
         if ($exists) {
             return json(['code' => 0, 'msg' => '用户名已存在']);
         }
 
-        // 检查邮箱是否已注册
         $emailExists = Db::name('user')->where('email', $email)->find();
         if ($emailExists) {
             return json(['code' => 0, 'msg' => '该邮箱已被注册']);
         }
 
-        // 创建用户
         $userId = Db::name('user')->insertGetId([
             'username'       => $username,
             'password'       => password_hash($password, PASSWORD_DEFAULT),
@@ -188,9 +169,6 @@ class User extends BaseController
         return json(['code' => 0, 'msg' => '注册失败，请稍后重试']);
     }
 
-    /**
-     * 用户登录
-     */
     public function login(): Response
     {
         if (!$this->request->isPost()) {
@@ -232,9 +210,6 @@ class User extends BaseController
         ]);
     }
 
-    /**
-     * 获取用户信息
-     */
     public function info(): Response
     {
         $userId = session('user_id');
@@ -251,27 +226,17 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $user]);
     }
 
-    /**
-     * 用户登出
-     */
     public function logout(): Response
     {
         session(null);
 
-        // 页面请求重定向，API 请求返回 JSON
         if ($this->request->isAjax() || str_contains($this->request->header('accept', ''), 'application/json')) {
             return json(['code' => 1, 'msg' => '已退出']);
         }
         return redirect('/login');
     }
 
-    // ========================================================
-    // 商品与节点
-    // ========================================================
 
-    /**
-     * 获取上架商品列表（用户端）
-     */
     public function products(): Response
     {
         $list = Db::name('product')
@@ -284,7 +249,6 @@ class User extends BaseController
             ->select()
             ->toArray();
 
-        // 解析 duration_options 为数组
         foreach ($list as &$item) {
             $item['durations'] = array_map('intval', explode(',', $item['duration_options'] ?? '1'));
             $item['price'] = (float) $item['price'];
@@ -294,9 +258,6 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 获取商品详情（用户端）
-     */
     public function productDetail(): Response
     {
         $id = (int) $this->request->param('id', 0);
@@ -318,11 +279,9 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '商品不存在或已下架']);
         }
 
-        // 解析 duration_options 为数组
         $product['durations'] = array_map('intval', explode(',', $product['duration_options'] ?? '1'));
         $product['price'] = (float) $product['price'];
 
-        // 获取该节点可用端口
         $occupied = Db::name('client')
             ->where('node_id', $product['node_id'])
             ->where('status', '<>', 2)
@@ -344,9 +303,6 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $product]);
     }
 
-    /**
-     * 直接创建订单（不经过购物车）
-     */
     public function orderCreateDirect(): Response
     {
         if (!$this->request->isPost()) {
@@ -366,7 +322,6 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '请选择商品和端口']);
         }
 
-        // 查询商品
         $product = Db::name('product')
             ->alias('p')
             ->join('node n', 'p.node_id = n.id', 'left')
@@ -380,30 +335,24 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '商品不存在或已下架']);
         }
 
-        // 校验时长
         $allowedDurations = array_map('intval', explode(',', $product['duration_options'] ?? '1'));
         if (!in_array($duration, $allowedDurations)) {
             return json(['code' => 0, 'msg' => '无效的购买时长']);
         }
 
-        // 校验端口在商品范围内
         if ($port < $product['port_start'] || $port > $product['port_end']) {
             return json(['code' => 0, 'msg' => "端口不在商品范围内 ({$product['port_start']}-{$product['port_end']})"]);
         }
 
-        // 后端二次校验端口未被占用
         $check = \app\service\OrderService::verifyPort($product['node_id'], $port);
         if (!$check['ok']) {
             return json(['code' => 0, 'msg' => $check['msg']]);
         }
 
-        // 计算金额
         $amount = round((float) $product['price'] * $duration, 2);
 
-        // 生成订单号
         $orderNo = date('YmdHis') . str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // 创建订单
         $orderId = Db::name('order')->insertGetId([
             'order_no'    => $orderNo,
             'user_id'     => $userId,
@@ -413,7 +362,7 @@ class User extends BaseController
             'proxy_type'  => $product['proxy_type'],
             'duration'    => $duration,
             'amount'      => $amount,
-            'status'      => 0, // 待支付
+            'status'      => 0,
             'create_time' => time(),
             'update_time' => time(),
         ]);
@@ -422,8 +371,7 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '订单创建失败']);
         }
 
-        // 生成支付链接
-        $subject = "雨梦FRPS业务管理系统 - {$product['name']} 端口 {$port} ({$product['proxy_type']})";
+        $subject = "雨梦FRPS多节点管理系统 - {$product['name']} 端口 {$port} ({$product['proxy_type']})";
 
         $payResult = \app\service\EpayService::createPayment(
             $orderNo,
@@ -444,9 +392,6 @@ class User extends BaseController
         ]);
     }
 
-    /**
-     * 获取节点列表（用户端）
-     */
     public function nodes(): Response
     {
         $list = Db::name('node')
@@ -458,9 +403,6 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 获取节点可用端口列表（排除已占用）
-     */
     public function ports(): Response
     {
         $nodeId = (int) $this->request->param('node_id', 0);
@@ -481,13 +423,11 @@ class User extends BaseController
             return json(['code' => 1, 'data' => []]);
         }
 
-        // 查询该节点下已占用的端口
         $occupied = Db::name('client')
             ->where('node_id', $nodeId)
-            ->where('status', '<>', 2) // 排除已过期
+            ->where('status', '<>', 2)
             ->column('port');
 
-        // 生成可用端口列表
         $available = [];
         for ($port = $rangeStart; $port <= $rangeEnd; $port++) {
             if (!in_array($port, $occupied)) {
@@ -507,13 +447,7 @@ class User extends BaseController
         ]);
     }
 
-    // ========================================================
-    // 购物车（Session 存储）
-    // ========================================================
 
-    /**
-     * 加入购物车
-     */
     public function cartAdd(): Response
     {
         if (!$this->request->isPost()) {
@@ -528,7 +462,6 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '请选择商品和端口']);
         }
 
-        // 查询商品（必须是上架状态）
         $product = Db::name('product')
             ->alias('p')
             ->join('node n', 'p.node_id = n.id', 'left')
@@ -542,34 +475,28 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '商品不存在或已下架']);
         }
 
-        // 校验时长
         $allowedDurations = array_map('intval', explode(',', $product['duration_options'] ?? '1'));
         if (!in_array($duration, $allowedDurations)) {
             return json(['code' => 0, 'msg' => '无效的购买时长']);
         }
 
-        // 校验端口在商品范围内
         if ($port < $product['port_start'] || $port > $product['port_end']) {
             return json(['code' => 0, 'msg' => "端口不在商品范围内 ({$product['port_start']}-{$product['port_end']})"]);
         }
 
-        // 后端二次校验端口未被占用
         $check = \app\service\OrderService::verifyPort($product['node_id'], $port);
         if (!$check['ok']) {
             return json(['code' => 0, 'msg' => $check['msg']]);
         }
 
-        // 初始化购物车
         $cart = session('cart') ?: [];
 
-        // 检查是否已在购物车中（同一端口+节点）
         foreach ($cart as $item) {
             if ($item['node_id'] == $product['node_id'] && $item['port'] == $port) {
                 return json(['code' => 0, 'msg' => '该端口已在购物车中']);
             }
         }
 
-        // 加入购物车（价格从商品表读取）
         $cart[] = [
             'product_id' => $productId,
             'node_id'    => $product['node_id'],
@@ -585,14 +512,10 @@ class User extends BaseController
         return json(['code' => 1, 'msg' => '已加入购物车', 'data' => ['count' => count($cart)]]);
     }
 
-    /**
-     * 查看购物车
-     */
     public function cartList(): Response
     {
         $cart = session('cart') ?: [];
 
-        // 补充节点名称
         $nodeIds = array_unique(array_column($cart, 'node_id'));
         $nodeNames = [];
         if (!empty($nodeIds)) {
@@ -618,9 +541,6 @@ class User extends BaseController
         ]);
     }
 
-    /**
-     * 删除购物车项
-     */
     public function cartRemove(): Response
     {
         if (!$this->request->isPost()) {
@@ -640,9 +560,6 @@ class User extends BaseController
         return json(['code' => 1, 'msg' => '已删除', 'data' => ['count' => count($cart)]]);
     }
 
-    /**
-     * 清空购物车
-     */
     public function cartClear(): Response
     {
         if (!$this->request->isPost()) {
@@ -654,13 +571,7 @@ class User extends BaseController
         return json(['code' => 1, 'msg' => '购物车已清空']);
     }
 
-    // ========================================================
-    // 订单
-    // ========================================================
 
-    /**
-     * 从购物车创建订单
-     */
     public function orderCreate(): Response
     {
         if (!$this->request->isPost()) {
@@ -677,16 +588,12 @@ class User extends BaseController
         $result = \app\service\OrderService::createOrders($userId, $cart);
 
         if ($result['ok']) {
-            // 清空购物车
             session('cart', []);
         }
 
         return json($result);
     }
 
-    /**
-     * 发起支付（返回支付跳转 URL）
-     */
     public function orderPay(): Response
     {
         $orderId = (int) $this->request->param('id', 0);
@@ -707,7 +614,7 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '订单不存在或已支付']);
         }
 
-        $subject = "雨梦FRPS业务管理系统 - {$order['node_name']} 端口 {$order['port']} ({$order['proxy_type']})";
+        $subject = "雨梦FRPS多节点管理系统 - {$order['node_name']} 端口 {$order['port']} ({$order['proxy_type']})";
 
         $result = \app\service\EpayService::createPayment(
             $order['order_no'],
@@ -719,9 +626,6 @@ class User extends BaseController
         return json($result);
     }
 
-    /**
-     * 我的订单列表
-     */
     public function orderList(): Response
     {
         $userId = session('user_id');
@@ -732,7 +636,6 @@ class User extends BaseController
             ->select()
             ->toArray();
 
-        // 状态文本映射
         $statusMap = [0 => '待支付', 1 => '已支付', 2 => '已过期', 3 => '已取消'];
 
         $result = array_map(function ($item) use ($statusMap) {
@@ -745,9 +648,6 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $result]);
     }
 
-    /**
-     * 获取订单详情
-     */
     public function orderDetail(): Response
     {
         $id = (int) $this->request->param('id', 0);
@@ -766,7 +666,6 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '订单不存在']);
         }
 
-        // 状态文本映射
         $statusMap = [0 => '待支付', 1 => '已支付', 2 => '已过期', 3 => '已取消'];
         $order['status_text'] = $statusMap[$order['status']] ?? '未知';
         $order['create_time_text'] = date('Y-m-d H:i:s', $order['create_time']);
@@ -775,9 +674,6 @@ class User extends BaseController
         return json(['code' => 1, 'data' => $order]);
     }
 
-    /**
-     * 获取我的产品详情（客户端隧道）
-     */
     public function clientDetail(): Response
     {
         $id = (int) $this->request->param('id', 0);
@@ -805,7 +701,6 @@ class User extends BaseController
             return json(['code' => 0, 'msg' => '产品不存在']);
         }
 
-        // 格式化
         $client['expire_date']  = $client['expire_time'] ? date('Y-m-d H:i', $client['expire_time']) : '-';
         $client['create_date']  = $client['create_time'] ? date('Y-m-d H:i', $client['create_time']) : '-';
         $client['is_expired']   = ($client['expire_time'] > 0 && $client['expire_time'] < time());
@@ -813,19 +708,17 @@ class User extends BaseController
             ? '已过期'
             : ($client['status'] == 1 ? '运行中' : '未激活');
 
-        // 剩余流量
         $trafficLimit = (int) ($client['traffic_limit'] ?? 0);
         $trafficUsed  = (int) ($client['traffic_used'] ?? 0);
         if ($trafficLimit > 0) {
             $remaining = $trafficLimit - $trafficUsed;
             $client['remaining_traffic'] = $remaining > 0 ? $remaining : 0;
         } else {
-            $client['remaining_traffic'] = -1; // -1 表示不限
+            $client['remaining_traffic'] = -1;
         }
         $client['traffic_limit_gb'] = $trafficLimit > 0 ? round($trafficLimit / 1024 / 1024 / 1024, 2) : 0;
         $client['traffic_used_gb']  = round($trafficUsed / 1024 / 1024 / 1024, 2);
 
-        // 连接信息（域名优先，否则用 IP）
         $client['connect_host'] = !empty($client['domain']) ? $client['domain'] : $client['server_addr'];
 
         return json(['code' => 1, 'data' => $client]);

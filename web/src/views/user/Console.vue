@@ -84,7 +84,6 @@ const orderCount = ref(0)
 const regDate = ref('')
 
 onMounted(async () => {
-  // 加载用户信息
   if (!userStore.userInfo) {
     try {
       const res = await import('../../api/user').then(m => m.getUserInfo())
@@ -94,7 +93,6 @@ onMounted(async () => {
 
   cartStore.load()
 
-  // 加载订单统计
   try {
     const res = await getOrders()
     if (res.code === 1) {

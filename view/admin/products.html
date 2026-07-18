@@ -1,6 +1,6 @@
 {extend name="layout_admin"}
 
-{block name="title"}商品管理 - {$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}
+{block name="title"}商品管理 - {$site.site_name ?? '雨梦FRPS多节点管理系统'}{/block}
 {block name="header-title"}商品管理{/block}
 
 {block name="style"}
@@ -17,11 +17,10 @@
 {/block}
 
 {block name="content"}
-<!-- 商品列表 -->
 <div class="card" id="listPanel">
     <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
         <span>商品列表</span>
-        <a href="javascript:;" onclick="showForm()" style="padding:6px 16px; background:#409eff; color:#fff; border-radius:4px; font-size:13px;">+ 添加商品</a>
+        <a href="javascript:;" onclick="showForm()" style="padding:6px 16px; background:
     </div>
     <table>
         <thead>
@@ -39,12 +38,11 @@
             </tr>
         </thead>
         <tbody id="productList">
-            <tr><td colspan="10" style="text-align:center; color:#999; padding:40px;">加载中...</td></tr>
+            <tr><td colspan="10" style="text-align:center; color:
         </tbody>
     </table>
 </div>
 
-<!-- 添加/编辑表单 -->
 <div class="card" id="formPanel" style="display:none;">
     <div class="card-title" id="formTitle">添加商品</div>
     <form onsubmit="return false;">
@@ -117,8 +115,8 @@
         </div>
 
         <div class="form-actions" style="display:flex; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid #f0f0f0;">
-            <button type="button" class="btn btn-primary" onclick="saveProduct()" style="padding:10px 24px; border-radius:6px; font-size:14px; cursor:pointer; border:none; background:#409eff; color:#fff;">保存商品</button>
-            <button type="button" onclick="hideForm()" style="padding:10px 24px; border-radius:6px; font-size:14px; cursor:pointer; border:1px solid #dcdfe6; background:#f5f7fa; color:#666;">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveProduct()" style="padding:10px 24px; border-radius:6px; font-size:14px; cursor:pointer; border:none; background:
+            <button type="button" onclick="hideForm()" style="padding:10px 24px; border-radius:6px; font-size:14px; cursor:pointer; border:1px solid
         </div>
         <div id="formMsg" style="font-size:13px; min-height:20px; margin-top:8px;"></div>
     </form>
@@ -127,7 +125,6 @@
 <script>
 var nodes = [];
 
-// 加载节点列表
 fetch('/api/admin/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(function(r) { return r.json(); })
     .then(function(res) {
@@ -139,7 +136,6 @@ fetch('/api/admin/nodes', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             }).join('');
     });
 
-// 加载商品列表
 function loadProducts() {
     fetch('/api/admin/products', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(r) { return r.json(); })
@@ -147,7 +143,7 @@ function loadProducts() {
             var list = res.data || [];
             var tbody = document.getElementById('productList');
             if (!list.length) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#999; padding:40px;">暂无商品</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:
                 return;
             }
             tbody.innerHTML = list.map(function(p) {
@@ -158,20 +154,20 @@ function loadProducts() {
                     '<td>' + (p.node_name || '-') + '</td>' +
                     '<td><span class="tag tag-green">' + proxyLabel + '</span></td>' +
                     '<td style="font-family:monospace;">' + p.port_start + '-' + p.port_end + '</td>' +
-                    '<td style="color:#f56c6c;font-weight:600;">¥' + parseFloat(p.price).toFixed(2) + '/月</td>' +
+                    '<td style="color:
                     '<td>' + (p.duration_options || '1') + ' 个月</td>' +
                     '<td><span class="tag ' + (p.status == 1 ? 'tag-green' : 'tag-red') + '">' + (p.status == 1 ? '上架' : '下架') + '</span></td>' +
                     '<td>' + p.sort + '</td>' +
                     '<td>' +
-                        '<a href="javascript:;" onclick="editProduct(' + p.id + ')" style="color:#409eff;margin-right:8px;">编辑</a>' +
-                        '<a href="javascript:;" onclick="toggleProduct(' + p.id + ')" style="color:#e6a23c;margin-right:8px;">' + (p.status == 1 ? '下架' : '上架') + '</a>' +
-                        '<a href="javascript:;" onclick="deleteProduct(' + p.id + ')" style="color:#f56c6c;">删除</a>' +
+                        '<a href="javascript:;" onclick="editProduct(' + p.id + ')" style="color:
+                        '<a href="javascript:;" onclick="toggleProduct(' + p.id + ')" style="color:
+                        '<a href="javascript:;" onclick="deleteProduct(' + p.id + ')" style="color:
                     '</td>' +
                 '</tr>';
             }).join('');
         })
         .catch(function() {
-            document.getElementById('productList').innerHTML = '<tr><td colspan="10" style="text-align:center; color:#f56c6c; padding:40px;">加载失败</td></tr>';
+            document.getElementById('productList').innerHTML = '<tr><td colspan="10" style="text-align:center; color:
         });
 }
 
@@ -180,7 +176,6 @@ function showForm() {
     document.getElementById('formPanel').style.display = 'block';
     document.getElementById('formTitle').textContent = '添加商品';
     document.getElementById('editId').value = '0';
-    // 清空表单
     document.getElementById('p_name').value = '';
     document.getElementById('p_node_id').value = '';
     document.getElementById('p_proxy_type').value = 'tcp';
@@ -246,10 +241,8 @@ async function saveProduct() {
         return;
     }
 
-    // 流量限制校验：0=不限，其他必须是正整数
     var traffic = parseInt(data.traffic_limit);
     if (data.traffic_limit === '0') {
-        // 0 表示不限，通过
     } else if (!traffic || traffic < 1) {
         msg.style.color = '#f56c6c';
         msg.textContent = '流量限制：0=不限，其他请填写正整数';

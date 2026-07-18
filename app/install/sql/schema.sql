@@ -1,4 +1,4 @@
---雨梦FRPS业务管理系统 安装向导 - 数据库表结构
+--雨梦FRPS多节点管理系统 安装向导 - 数据库表结构
 -- 表前缀: RO_
 
 -------------------------------------------------------------
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `RO_order` (
 -- 插入默认配置（使用 INSERT IGNORE 避免重复插入报错）
 INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `create_time`, `update_time`) VALUES
 ('basic', 'site_name', '我的网站', 'text', '网站名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('basic', 'site_description', '雨梦FRPS业务管理系统是一个基于ThinkPHP8开发的开源项目', 'textarea', '网站描述', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('basic', 'site_description', '雨梦FRPS多节点管理系统是一个基于ThinkPHP8开发的开源项目', 'textarea', '网站描述', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_keywords', 'ThinkPHP8,CMS', 'text', '网站关键词', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_logo', '', 'image', '网站Logo', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('basic', 'site_favicon', '', 'image', '网站图标', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
@@ -178,7 +178,7 @@ INSERT IGNORE INTO `RO_setting` (`group`, `name`, `value`, `type`, `title`, `cre
 ('email', 'smtp_user', '', 'text', 'SMTP用户名', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_pass', '', 'text', 'SMTP密码', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_from', '', 'text', '发件人邮箱', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('email', 'smtp_name', '雨梦FRPS业务管理系统', 'text', '发件人名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('email', 'smtp_name', '雨梦FRPS多节点管理系统', 'text', '发件人名称', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'smtp_ssl', '1', 'switch', '启用SSL', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
 ('email', 'verify_expire', '300', 'number', '验证码有效期(秒)', UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 

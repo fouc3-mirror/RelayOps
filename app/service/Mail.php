@@ -5,14 +5,8 @@ namespace app\service;
 
 use think\facade\Db;
 
-/**
- * 邮件服务
- */
 class Mail
 {
-    /**
-     * 获取SMTP配置
-     */
     protected static function getConfig(): array
     {
         $config = [];
@@ -26,9 +20,6 @@ class Mail
         return $config;
     }
 
-    /**
-     * 获取系统设置
-     */
     protected static function getSiteSettings(): array
     {
         $settings = [];
@@ -39,17 +30,13 @@ class Mail
             $settings[$field] = $row['value'] ?? '';
         }
 
-        // 设置默认值
         if (empty($settings['site_name'])) {
-            $settings['site_name'] = '雨梦FRPS业务管理系统';
+            $settings['site_name'] = '雨梦FRPS多节点管理系统';
         }
 
         return $settings;
     }
 
-    /**
-     * 发送邮件
-     */
     public static function send(string $to, string $subject, string $content): bool
     {
         $config = self::getConfig();
@@ -63,7 +50,7 @@ class Mail
         $user = $config['smtp_user'];
         $pass = $config['smtp_pass'];
         $from = $config['smtp_from'] ?: $user;
-        $name = $config['smtp_name'] ?: '雨梦FRPS业务管理系统';
+        $name = $config['smtp_name'] ?: '雨梦FRPS多节点管理系统';
         $ssl = $config['smtp_ssl'] === '1';
 
         $socket = self::connect($host, $port, $ssl);
@@ -72,14 +59,11 @@ class Mail
         }
 
         try {
-            // 读取欢迎信息
             self::readResponse($socket);
 
-            // 发送 EHLO
             self::sendCommand($socket, "EHLO relayops");
             self::readResponse($socket);
 
-            // 启用 STARTTLS (如果需要)
             if ($ssl && $port === 587) {
                 self::sendCommand($socket, "STARTTLS");
                 self::readResponse($socket);
@@ -88,7 +72,6 @@ class Mail
                 self::readResponse($socket);
             }
 
-            // 登录认证
             self::sendCommand($socket, "AUTH LOGIN");
             self::readResponse($socket);
 
@@ -98,19 +81,15 @@ class Mail
             self::sendCommand($socket, base64_encode($pass));
             self::readResponse($socket);
 
-            // 设置发件人
             self::sendCommand($socket, "MAIL FROM:<{$from}>");
             self::readResponse($socket);
 
-            // 设置收件人
             self::sendCommand($socket, "RCPT TO:<{$to}>");
             self::readResponse($socket);
 
-            // 发送数据
             self::sendCommand($socket, "DATA");
             self::readResponse($socket);
 
-            // 构建邮件头
             $headers = "From: =?UTF-8?B?" . base64_encode($name) . "?= <{$from}>\r\n";
             $headers .= "To: <{$to}>\r\n";
             $headers .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
@@ -119,12 +98,10 @@ class Mail
             $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
             $headers .= "\r\n";
 
-            // 发送邮件内容
             $body = $headers . $content . "\r\n.\r\n";
             fwrite($socket, $body);
             self::readResponse($socket);
 
-            // 退出
             self::sendCommand($socket, "QUIT");
             self::readResponse($socket);
 
@@ -137,9 +114,6 @@ class Mail
         }
     }
 
-    /**
-     * 连接SMTP服务器
-     */
     protected static function connect(string $host, int $port, bool $ssl)
     {
         $errno = 0;
@@ -152,7 +126,6 @@ class Mail
                     'verify_peer_name' => false,
                 ],
             ]);
-            // 465端口使用ssl://直接建立SSL连接，587端口用tcp://配合STARTTLS
             $scheme = ($port === 465) ? 'ssl' : 'tcp';
             $socket = @stream_socket_client("{$scheme}://{$host}:{$port}", $errno, $errstr, 10, STREAM_CLIENT_CONNECT, $context);
         } else {
@@ -162,17 +135,11 @@ class Mail
         return $socket ?: null;
     }
 
-    /**
-     * 发送命令
-     */
     protected static function sendCommand($socket, string $command): void
     {
         fwrite($socket, $command . "\r\n");
     }
 
-    /**
-     * 读取响应
-     */
     protected static function readResponse($socket): string
     {
         $response = '';
@@ -189,30 +156,22 @@ class Mail
         return $response;
     }
 
-    /**
-     * 生成验证码
-     */
     public static function generateCode(): string
     {
         return str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * 保存验证码
-     */
     public static function saveCode(string $email, string $code, string $scene = 'register'): bool
     {
         $config = self::getConfig();
         $expire = (int) ($config['verify_expire'] ?: 300);
 
-        // 删除同邮箱同场景的旧验证码
         Db::name('email_verify')
             ->where('email', $email)
             ->where('scene', $scene)
             ->where('used', 0)
             ->delete();
 
-        // 插入新验证码
         $result = Db::name('email_verify')->insert([
             'email'       => $email,
             'code'        => $code,
@@ -225,9 +184,6 @@ class Mail
         return $result > 0;
     }
 
-    /**
-     * 验证验证码
-     */
     public static function verifyCode(string $email, string $code, string $scene = 'register'): bool
     {
         $record = Db::name('email_verify')
@@ -242,7 +198,6 @@ class Mail
             return false;
         }
 
-        // 标记为已使用
         Db::name('email_verify')
             ->where('id', $record['id'])
             ->update(['used' => 1]);
@@ -250,9 +205,6 @@ class Mail
         return true;
     }
 
-    /**
-     * 发送验证码邮件
-     */
     public static function sendVerifyCode(string $email, string $scene = 'register'): array
     {
         $config = self::getConfig();
@@ -261,21 +213,17 @@ class Mail
             return ['code' => 0, 'msg' => '邮件服务未配置'];
         }
 
-        // 生成验证码
         $code = self::generateCode();
 
-        // 保存验证码
         if (!self::saveCode($email, $code, $scene)) {
             return ['code' => 0, 'msg' => '验证码保存失败'];
         }
 
-        // 构建邮件内容
         $expire = (int) ($config['verify_expire'] ?: 300);
         $siteSettings = self::getSiteSettings();
         $subject = $siteSettings['site_name'] . ' 验证码';
         $content = self::buildVerifyEmail($code, $expire, $scene, $siteSettings);
 
-        // 发送邮件
         if (!self::send($email, $subject, $content)) {
             return ['code' => 0, 'msg' => '邮件发送失败，请检查SMTP配置'];
         }
@@ -283,14 +231,11 @@ class Mail
         return ['code' => 1, 'msg' => '验证码已发送，请查收邮件'];
     }
 
-    /**
-     * 构建验证码邮件模板
-     */
     protected static function buildVerifyEmail(string $code, int $expire, string $scene, array $siteSettings = []): string
     {
         $sceneText = $scene === 'register' ? '用户注册' : '密码重置';
         $currentYear = date('Y');
-        $siteName = htmlspecialchars($siteSettings['site_name'] ?? '雨梦FRPS业务管理系统');
+        $siteName = htmlspecialchars($siteSettings['site_name'] ?? '雨梦FRPS多节点管理系统');
         $siteFooter = $siteSettings['site_footer'] ?? "Copyright &copy; {$currentYear} {$siteName}. All rights reserved.";
 
         return <<<HTML
@@ -319,7 +264,7 @@ class Mail
             <p class="info">您正在进行 <strong>{$sceneText}</strong> 操作</p>
             <div class="code">{$code}</div>
             <p class="info">验证码有效期为 <span class="expire">{$expire} 秒</span></p>
-            <p class="info" style="color: #999; font-size: 12px;">如果这不是您的操作，请忽略此邮件</p>
+            <p class="info" style="color:
         </div>
         <div class="footer">
             {$siteFooter}

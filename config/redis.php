@@ -2,10 +2,6 @@
 
 use think\facade\Db;
 
-/**
- * Redis 配置（从数据库 RO_setting 读取）
- * 优先使用数据库配置，不存在时回退到环境变量
- */
 return [
     'host'     => function () {
         $row = Db::name('setting')->where('name', 'redis_host')->find();

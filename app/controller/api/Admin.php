@@ -9,9 +9,6 @@ use think\Response;
 
 class Admin extends BaseController
 {
-    /**
-     * 管理员登录
-     */
     public function login(): Response
     {
         if (!$this->request->isPost()) {
@@ -53,9 +50,6 @@ class Admin extends BaseController
         ]);
     }
 
-    /**
-     * 获取管理员信息
-     */
     public function info(): Response
     {
         $adminId = session('admin_id');
@@ -71,18 +65,12 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $admin]);
     }
 
-    /**
-     * 管理员登出
-     */
     public function logout(): Response
     {
         session(null);
         return json(['code' => 1, 'msg' => '已退出']);
     }
 
-    /**
-     * 管理员发送重置密码验证码
-     */
     public function sendResetVerify(): Response
     {
         if (!$this->request->isPost()) {
@@ -95,7 +83,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '请输入管理员账号']);
         }
 
-        // 查找管理员
         $admin = Db::name('admin')->where('username', $username)->find();
         if (!$admin) {
             return json(['code' => 0, 'msg' => '管理员账号不存在']);
@@ -107,7 +94,6 @@ class Admin extends BaseController
 
         $email = $admin['email'];
 
-        // 检查发送频率（60秒内不能重复发送）
         $lastSend = Db::name('email_verify')
             ->where('email', $email)
             ->where('scene', 'admin_reset')
@@ -124,9 +110,6 @@ class Admin extends BaseController
         return json($result);
     }
 
-    /**
-     * 管理员重置密码
-     */
     public function resetPassword(): Response
     {
         if (!$this->request->isPost()) {
@@ -150,7 +133,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '两次输入的密码不一致']);
         }
 
-        // 查找管理员
         $admin = Db::name('admin')->where('username', $username)->find();
         if (!$admin) {
             return json(['code' => 0, 'msg' => '管理员账号不存在']);
@@ -160,12 +142,10 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '该账号未设置邮箱，无法重置密码']);
         }
 
-        // 验证邮箱验证码
         if (!\app\service\Mail::verifyCode($admin['email'], $code, 'admin_reset')) {
             return json(['code' => 0, 'msg' => '验证码错误或已过期']);
         }
 
-        // 更新密码
         $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
         Db::name('admin')
             ->where('id', $admin['id'])
@@ -177,9 +157,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => '密码重置成功，请使用新密码登录']);
     }
 
-    /**
-     * 用户列表
-     */
     public function userList(): Response
     {
         $list = Db::name('user')
@@ -190,9 +167,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 获取用户详情
-     */
     public function userDetail(): Response
     {
         $id = (int) $this->request->param('id', 0);
@@ -213,9 +187,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $user]);
     }
 
-    /**
-     * 添加/编辑用户
-     */
     public function userSave(): Response
     {
         if (!$this->request->isPost()) {
@@ -230,7 +201,6 @@ class Admin extends BaseController
         $phone = trim($this->request->param('phone', ''));
         $status = (int) $this->request->param('status', 1);
 
-        // 数据验证
         if (empty($username)) {
             return json(['code' => 0, 'msg' => '用户名不能为空']);
         }
@@ -251,7 +221,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '邮箱格式不正确']);
         }
 
-        // 新增时密码必填，编辑时可选
         if ($id <= 0 && empty($password)) {
             return json(['code' => 0, 'msg' => '新增用户时密码不能为空']);
         }
@@ -260,7 +229,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '密码长度不能少于6位']);
         }
 
-        // 检查用户名是否已存在（排除自身）
         $exists = Db::name('user')->where('username', $username);
         if ($id > 0) {
             $exists->where('id', '<>', $id);
@@ -269,7 +237,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '用户名已存在']);
         }
 
-        // 检查邮箱是否已存在（排除自身）
         $emailExists = Db::name('user')->where('email', $email);
         if ($id > 0) {
             $emailExists->where('id', '<>', $id);
@@ -288,17 +255,14 @@ class Admin extends BaseController
             'update_time' => $time,
         ];
 
-        // 密码不为空时更新密码
         if (!empty($password)) {
             $saveData['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 
         if ($id > 0) {
-            // 编辑
             Db::name('user')->where('id', $id)->update($saveData);
             return json(['code' => 1, 'msg' => '用户已更新']);
         } else {
-            // 新增
             $saveData['create_time'] = $time;
             $saveData['last_login_time'] = null;
             $saveData['last_login_ip'] = '';
@@ -307,9 +271,6 @@ class Admin extends BaseController
         }
     }
 
-    /**
-     * 删除用户
-     */
     public function userDelete(): Response
     {
         if (!$this->request->isPost()) {
@@ -327,13 +288,11 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
-        // 检查是否有订单关联
         $orderCount = Db::name('order')->where('user_id', $id)->count();
         if ($orderCount > 0) {
             return json(['code' => 0, 'msg' => '该用户有关联订单，无法删除']);
         }
 
-        // 检查是否有客户端关联
         $clientCount = Db::name('client')->where('user_id', $id)->count();
         if ($clientCount > 0) {
             return json(['code' => 0, 'msg' => '该用户有关联客户端，无法删除']);
@@ -343,9 +302,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => '用户已删除']);
     }
 
-    /**
-     * 切换用户状态
-     */
     public function userToggle(): Response
     {
         if (!$this->request->isPost()) {
@@ -368,12 +324,8 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => $newStatus == 1 ? '用户已启用' : '用户已禁用']);
     }
 
-    /**
-     * 节点列表（管理端）
-     */
     public function nodeList(): Response
     {
-        // 检测 domain 列是否存在（兼容旧数据库）
         static $hasDomain = null;
         if ($hasDomain === null) {
             try {
@@ -398,9 +350,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 获取节点详情
-     */
     public function nodeDetail(): Response
     {
         $id = (int) $this->request->param('id', 0);
@@ -418,9 +367,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $node]);
     }
 
-    /**
-     * 添加/编辑节点
-     */
     public function nodeSave(): Response
     {
         if (!$this->request->isPost()) {
@@ -443,7 +389,6 @@ class Admin extends BaseController
         $status = (int) $this->request->param('status', 1);
         $description = $this->request->param('description', '');
 
-        // 数据验证
         if (empty($name)) {
             return json(['code' => 0, 'msg' => '节点名称不能为空']);
         }
@@ -452,7 +397,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '服务器地址不能为空']);
         }
 
-        // 验证IP或域名格式
         if (!filter_var($serverAddr, FILTER_VALIDATE_IP) && !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/', $serverAddr)) {
             return json(['code' => 0, 'msg' => '服务器地址格式不正确（支持IP或域名）']);
         }
@@ -465,7 +409,6 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => 'Dashboard端口不正确']);
         }
 
-        // 验证端口范围
         if ($portRangeStart > 0 && $portRangeEnd > 0) {
             if ($portRangeStart > $portRangeEnd) {
                 return json(['code' => 0, 'msg' => '端口范围起始不能大于结束']);
@@ -475,7 +418,6 @@ class Admin extends BaseController
             }
         }
 
-        // 检查节点名称是否已存在（排除自身）
         $exists = Db::name('node')->where('name', $name);
         if ($id > 0) {
             $exists->where('id', '<>', $id);
@@ -502,7 +444,6 @@ class Admin extends BaseController
             'update_time'      => $time,
         ];
 
-        // domain 列兼容：列存在时才写入
         static $hasDomain = null;
         if ($hasDomain === null) {
             try {
@@ -517,20 +458,15 @@ class Admin extends BaseController
         }
 
         if ($id > 0) {
-            // 编辑
             Db::name('node')->where('id', $id)->update($saveData);
             return json(['code' => 1, 'msg' => '节点已更新']);
         } else {
-            // 添加
             $saveData['create_time'] = $time;
             Db::name('node')->insert($saveData);
             return json(['code' => 1, 'msg' => '节点已添加']);
         }
     }
 
-    /**
-     * 删除节点
-     */
     public function nodeDelete(): Response
     {
         if (!$this->request->isPost()) {
@@ -548,13 +484,11 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '节点不存在']);
         }
 
-        // 检查是否有商品关联
         $productCount = Db::name('product')->where('node_id', $id)->count();
         if ($productCount > 0) {
             return json(['code' => 0, 'msg' => '该节点下有商品关联，无法删除']);
         }
 
-        // 检查是否有客户端关联
         $clientCount = Db::name('client')->where('node_id', $id)->count();
         if ($clientCount > 0) {
             return json(['code' => 0, 'msg' => '该节点下有客户端关联，无法删除']);
@@ -564,9 +498,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => '节点已删除']);
     }
 
-    /**
-     * 切换节点状态
-     */
     public function nodeToggle(): Response
     {
         if (!$this->request->isPost()) {
@@ -589,13 +520,7 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => $newStatus == 1 ? '节点已启用' : '节点已禁用']);
     }
 
-    // ========================================================
-    // 系统设置
-    // ========================================================
 
-    /**
-     * 获取系统设置（按分组）
-     */
     public function settings(): Response
     {
         $group = $this->request->param('group', '');
@@ -614,9 +539,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $config]);
     }
 
-    /**
-     * 保存系统设置（通用：接收任意分组的 key-value）
-     */
     public function saveSettings(): Response
     {
         if (!$this->request->isPost()) {
@@ -655,9 +577,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => '配置已保存']);
     }
 
-    /**
-     * 测试支付（1元）
-     */
     public function testPay(): Response
     {
         if (!$this->request->isPost()) {
@@ -666,13 +585,12 @@ class Admin extends BaseController
 
         $payType = $this->request->post('pay_type', 'alipay');
 
-        // 生成测试订单号
         $orderNo = 'test_' . date('YmdHis') . '_' . mt_rand(1000, 9999);
 
         $result = \app\service\EpayService::createPayment(
             $orderNo,
             1.00,
-            '雨梦FRPS业务管理系统 支付测试（1元）',
+            '雨梦FRPS多节点管理系统 支付测试（1元）',
             $payType
         );
 
@@ -689,9 +607,6 @@ class Admin extends BaseController
         ]);
     }
 
-    /**
-     * 测试发送邮件
-     */
     public function testEmail(): Response
     {
         if (!$this->request->isPost()) {
@@ -707,13 +622,7 @@ class Admin extends BaseController
         return json($result);
     }
 
-    // ========================================================
-    // 商品管理
-    // ========================================================
 
-    /**
-     * 商品列表
-     */
     public function productList(): Response
     {
         $list = Db::name('product')
@@ -727,9 +636,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 添加/编辑商品
-     */
     public function productSave(): Response
     {
         if (!$this->request->isPost()) {
@@ -749,7 +655,6 @@ class Admin extends BaseController
         $description = $this->request->param('description', '');
         $trafficLimit = (int) $this->request->param('traffic_limit', 0);
 
-        // 检查 traffic_limit 列是否存在
         static $hasTrafficLimit = null;
         if ($hasTrafficLimit === null) {
             try {
@@ -760,7 +665,6 @@ class Admin extends BaseController
             }
         }
 
-        // 参数校验
         if (empty($name)) {
             return json(['code' => 0, 'msg' => '请填写商品名称']);
         }
@@ -777,20 +681,17 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '价格不能为负数']);
         }
 
-        // 检查节点是否存在
         $node = Db::name('node')->where('id', $nodeId)->find();
         if (!$node) {
             return json(['code' => 0, 'msg' => '节点不存在']);
         }
 
-        // 检查端口范围是否在节点范围内
         if ($node['port_range_start'] > 0 && $node['port_range_end'] > 0) {
             if ($portStart < $node['port_range_start'] || $portEnd > $node['port_range_end']) {
                 return json(['code' => 0, 'msg' => "端口范围超出节点限制 ({$node['port_range_start']}-{$node['port_range_end']})"]);
             }
         }
 
-        // 检查端口范围是否与其他商品冲突
         $conflict = Db::name('product')
             ->where('node_id', $nodeId)
             ->where('proxy_type', $proxyType)
@@ -832,9 +733,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => $id > 0 ? '商品已更新' : '商品已添加']);
     }
 
-    /**
-     * 删除商品
-     */
     public function productDelete(): Response
     {
         if (!$this->request->isPost()) {
@@ -850,9 +748,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => '商品已删除']);
     }
 
-    /**
-     * 切换商品状态
-     */
     public function productToggle(): Response
     {
         if (!$this->request->isPost()) {
@@ -871,13 +766,7 @@ class Admin extends BaseController
         return json(['code' => 1, 'msg' => $newStatus == 1 ? '已上架' : '已下架']);
     }
 
-    // ========================================================
-    // 订单管理
-    // ========================================================
 
-    /**
-     * 订单列表
-     */
     public function orderList(): Response
     {
         $status = $this->request->param('status', '');
@@ -894,7 +783,6 @@ class Admin extends BaseController
 
         $list = $query->select()->toArray();
 
-        // 格式化时间
         foreach ($list as &$item) {
             $item['create_time'] = $item['create_time'] ? date('Y-m-d H:i', $item['create_time']) : '-';
         }
@@ -902,9 +790,6 @@ class Admin extends BaseController
         return json(['code' => 1, 'data' => $list]);
     }
 
-    /**
-     * 手动创建订单
-     */
     public function orderSave(): Response
     {
         if (!$this->request->isPost()) {
@@ -923,30 +808,25 @@ class Admin extends BaseController
             return json(['code' => 0, 'msg' => '请填写完整信息']);
         }
 
-        // 校验用户
         $user = Db::name('user')->where('id', $userId)->find();
         if (!$user) {
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
-        // 校验节点
         $node = Db::name('node')->where('id', $nodeId)->find();
         if (!$node) {
             return json(['code' => 0, 'msg' => '节点不存在']);
         }
 
-        // 校验端口是否被占用
         $check = \app\service\OrderService::verifyPort($nodeId, $port);
         if (!$check['ok']) {
             return json(['code' => 0, 'msg' => $check['msg']]);
         }
 
-        // 生成订单号
         $orderNo = 'ADMIN' . date('YmdHis') . str_pad((string) mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
 
         $time = time();
 
-        // 创建订单
         $orderId = Db::name('order')->insertGetId([
             'order_no'    => $orderNo,
             'user_id'     => $userId,
@@ -962,21 +842,16 @@ class Admin extends BaseController
             'update_time' => $time,
         ]);
 
-        // 已支付则直接激活服务
         if ($status === 1 && $orderId) {
             try {
                 \app\service\OrderService::activateService($orderId, $orderNo);
             } catch (\Throwable $e) {
-                // 激活失败不影响订单创建
             }
         }
 
         return json(['code' => 1, 'msg' => '订单创建成功']);
     }
 
-    /**
-     * 手动标记订单为已支付
-     */
     public function orderPay(): Response
     {
         if (!$this->request->isPost()) {
@@ -1002,9 +877,6 @@ class Admin extends BaseController
         }
     }
 
-    /**
-     * 删除订单
-     */
     public function orderDelete(): Response
     {
         if (!$this->request->isPost()) {

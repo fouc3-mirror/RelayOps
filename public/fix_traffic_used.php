@@ -1,5 +1,4 @@
 <?php
-// 一次性迁移脚本：添加 traffic_used 列到 RO_client 表
 $host = '127.0.0.1';
 $port = 3306;
 $db   = '127_0_0_1';

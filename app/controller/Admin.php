@@ -9,9 +9,6 @@ use think\Response;
 
 class Admin extends BaseController
 {
-    /**
-     * 获取系统设置
-     */
     protected function getSiteSettings(): array
     {
         static $settings = null;
@@ -26,9 +23,8 @@ class Admin extends BaseController
             $settings[$field] = $row['value'] ?? '';
         }
 
-        // 设置默认值
         if (empty($settings['site_name'])) {
-            $settings['site_name'] = '雨梦FRPS业务管理系统';
+            $settings['site_name'] = '雨梦FRPS多节点管理系统';
         }
         if (empty($settings['site_favicon'])) {
             $settings['site_favicon'] = '/favicon.ico';
@@ -37,20 +33,13 @@ class Admin extends BaseController
         return $settings;
     }
 
-    /**
-     * 管理后台首页（重定向到仪表盘）
-     */
     public function index(): Response
     {
         return redirect('/admin/dashboard');
     }
 
-    /**
-     * 管理员登录页
-     */
     public function login(): Response
     {
-        // 已登录则跳转到后台
         if (session('admin_id')) {
             return redirect('/admin/dashboard');
         }
@@ -58,9 +47,6 @@ class Admin extends BaseController
         return $this->view('admin/login', ['site' => $siteSettings]);
     }
 
-    /**
-     * 仪表盘
-     */
     public function dashboard(): Response
     {
         $data = [
@@ -76,47 +62,34 @@ class Admin extends BaseController
         try {
             $data['userCount'] = Db::name('user')->count();
         } catch (\Exception $e) {
-            // user 表不存在时忽略
         }
         try {
             $data['orderCount'] = Db::name('order')->count();
-            // 计算本月收入（已支付的订单）
             $monthStart = strtotime(date('Y-m-01'));
             $data['monthlyIncome'] = Db::name('order')
                 ->where('status', 1)
                 ->where('pay_time', '>=', $monthStart)
                 ->sum('amount') ?? 0;
         } catch (\Exception $e) {
-            // order 表不存在时忽略
         }
         $data['site'] = $this->getSiteSettings();
         return $this->view('admin/dashboard', $data);
     }
 
-    /**
-     * 节点管理
-     */
     public function nodes(): Response
     {
         $siteSettings = $this->getSiteSettings();
         return $this->view('admin/nodes', ['active' => 'nodes', 'site' => $siteSettings]);
     }
 
-    /**
-     * 用户管理
-     */
     public function users(): Response
     {
         $siteSettings = $this->getSiteSettings();
         return $this->view('admin/users', ['active' => 'users', 'site' => $siteSettings]);
     }
 
-    /**
-     * 系统设置
-     */
     public function settings(): Response
     {
-        // 按分组获取所有设置
         $groups = ['basic', 'system', 'email', 'pay'];
         $settings = [];
 
@@ -135,27 +108,18 @@ class Admin extends BaseController
         ]);
     }
 
-    /**
-     * 商品管理
-     */
     public function products(): Response
     {
         $siteSettings = $this->getSiteSettings();
         return $this->view('admin/products', ['active' => 'products', 'site' => $siteSettings]);
     }
 
-    /**
-     * 订单管理
-     */
     public function orders(): Response
     {
         $siteSettings = $this->getSiteSettings();
         return $this->view('admin/orders', ['active' => 'orders', 'site' => $siteSettings]);
     }
 
-    /**
-     * 渲染视图
-     */
     protected function view(string $template, array $data = []): Response
     {
         $viewPath = app()->getRootPath() . 'view/';

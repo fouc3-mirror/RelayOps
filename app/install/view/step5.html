@@ -1,6 +1,6 @@
 {extend name="layout"}
 
-{block name="title"}安装中 - 雨梦FRPS业务管理系统安装向导{/block}
+{block name="title"}安装中 - 雨梦FRPS多节点管理系统安装向导{/block}
 
 {block name="content"}
 <div class="install-steps">
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<h2 style="margin-bottom: 20px; color: #333;">开始安装</h2>
+<h2 style="margin-bottom: 20px; color:
 
 <div id="installContent">
     <div id="loading" class="loading" style="display: block;">
@@ -50,13 +50,11 @@
 
 {block name="script"}
 <script>
-    // 页面加载时自动开始安装
     document.addEventListener('DOMContentLoaded', function() {
         startInstall();
     });
 
     function startInstall() {
-        // 从 sessionStorage 获取数据
         var dbHost = sessionStorage.getItem('db_host') || '127.0.0.1';
         var dbPort = sessionStorage.getItem('db_port') || '3306';
         var dbName = sessionStorage.getItem('db_name') || '';
@@ -65,7 +63,7 @@
         var adminUser = sessionStorage.getItem('admin_user') || 'admin';
         var adminPass = sessionStorage.getItem('admin_pass') || '';
         var adminEmail = sessionStorage.getItem('admin_email') || '';
-        var siteName = sessionStorage.getItem('site_name') || '雨梦FRPS业务管理系统';
+        var siteName = sessionStorage.getItem('site_name') || '雨梦FRPS多节点管理系统';
         var siteDescription = sessionStorage.getItem('site_description') || '';
 
         if (!dbName || !dbUser || !adminPass) {
@@ -73,7 +71,6 @@
             return;
         }
 
-        // 创建 FormData
         var formData = new FormData();
         formData.append('db_host', dbHost);
         formData.append('db_port', dbPort);
@@ -86,7 +83,6 @@
         formData.append('site_name', siteName);
         formData.append('site_description', siteDescription);
 
-        // 发送流式安装请求
         fetch('{:url("/install/install")}', {
             method: 'POST',
             body: formData,
@@ -98,7 +94,6 @@
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
-            // 读取流式响应
             var reader = response.body.getReader();
             var decoder = new TextDecoder('utf-8');
             var buffer = '';
@@ -111,7 +106,6 @@
 
                     buffer += decoder.decode(result.value, {stream: true});
                     var lines = buffer.split('\n');
-                    // 最后一行可能不完整，保留到下次处理
                     buffer = lines.pop();
 
                     for (var i = 0; i < lines.length; i++) {
@@ -144,14 +138,12 @@
             updateProgress(data.progress, data.message);
             addLogItem(data.message, 'done');
 
-            // 完成时显示结果
             if (data.step === 'complete') {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('installResult').style.display = 'block';
                 if (data.url) {
                     document.getElementById('completeLink').href = data.url;
                 }
-                // 清除 sessionStorage
                 var keys = ['db_host', 'db_port', 'db_name', 'db_user', 'db_pass',
                     'admin_user', 'admin_pass', 'admin_email', 'site_name', 'site_description'];
                 for (var i = 0; i < keys.length; i++) {
@@ -173,7 +165,6 @@
         item.className = 'log-item ' + (type || '');
         item.textContent = message;
         log.appendChild(item);
-        // 自动滚动到底部
         log.scrollTop = log.scrollHeight;
     }
 

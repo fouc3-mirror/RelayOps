@@ -77,7 +77,7 @@ async function loadOrders() {
 }
 
 async function handlePay(row) {
-  const payType = 'alipay' // 默认支付宝，后续可加选择
+  const payType = 'alipay'
   try {
     const res = await orderPay(row.id, payType)
     if (res.code === 1 && res.url) {

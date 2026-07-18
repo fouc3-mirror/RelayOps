@@ -7,7 +7,6 @@
       <p>暂无在售商品</p>
     </div>
 
-    <!-- 商品卡片列表 -->
     <el-row :gutter="16">
       <el-col :span="8" v-for="product in products" :key="product.id" style="margin-bottom:16px;">
         <el-card shadow="hover" class="product-card">

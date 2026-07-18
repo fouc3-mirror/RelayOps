@@ -1,6 +1,6 @@
 {extend name="layout"}
 
-{block name="title"}管理员配置 - 雨梦FRPS业务管理系统安装向导{/block}
+{block name="title"}管理员配置 - 雨梦FRPS多节点管理系统安装向导{/block}
 
 {block name="content"}
 <div class="install-steps">
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<h2 style="margin-bottom: 20px; color: #333;">管理员配置</h2>
+<h2 style="margin-bottom: 20px; color:
 
 <form id="adminForm">
     <div class="form-group">
@@ -40,18 +40,18 @@
     </div>
 
     <div class="form-group">
-        <label for="admin_email">管理员邮箱 <span style="color:#f56c6c;">* 必填</span></label>
+        <label for="admin_email">管理员邮箱 <span style="color:
         <input type="email" id="admin_email" name="admin_email" placeholder="用于找回密码，请填写真实邮箱" required>
     </div>
 
     <div class="form-group">
         <label for="site_name">系统名称</label>
-        <input type="text" id="site_name" name="site_name" value="雨梦FRPS业务管理系统" placeholder="请输入系统名称" required>
+        <input type="text" id="site_name" name="site_name" value="雨梦FRPS多节点管理系统" placeholder="请输入系统名称" required>
     </div>
 
     <div class="form-group">
         <label for="site_description">系统描述</label>
-        <textarea id="site_description" name="site_description" rows="3" placeholder="请输入系统描述">雨梦FRPS业务管理系统是一个基于ThinkPHP8开发的FRPS节点管理系统</textarea>
+        <textarea id="site_description" name="site_description" rows="3" placeholder="请输入系统描述">雨梦FRPS多节点管理系统是一个基于ThinkPHP8开发的FRPS节点管理系统</textarea>
     </div>
 
     <div class="alert alert-info">
@@ -110,7 +110,6 @@
             return;
         }
 
-        // 保存数据到 sessionStorage
         sessionStorage.setItem('admin_user', adminUser);
         sessionStorage.setItem('admin_pass', adminPass);
         sessionStorage.setItem('admin_email', adminEmail);

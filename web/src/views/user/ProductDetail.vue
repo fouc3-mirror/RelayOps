@@ -122,11 +122,9 @@ async function loadProduct() {
     const res = await getProductDetail(route.params.id)
     if (res.code === 1) {
       product.value = res.data
-      // 默认选中第一个可用端口
       if (res.data.available_ports?.length > 0) {
         selectedPort.value = res.data.available_ports[0]
       }
-      // 默认选中最短时长
       if (res.data.durations?.length > 0) {
         selectedDuration.value = res.data.durations[0]
       }
@@ -154,11 +152,9 @@ async function handleOrder() {
     if (res.code === 1) {
       ElMessage.success('订单创建成功')
 
-      // 如果有支付链接，跳转到支付页面
       if (res.data.pay_url) {
         window.location.href = res.data.pay_url
       } else {
-        // 跳转到订单详情或订单列表
         router.push('/console/orders')
       }
     } else {

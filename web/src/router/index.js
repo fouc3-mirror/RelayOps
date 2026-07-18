@@ -13,7 +13,6 @@ import AdminLogin from '../views/admin/Login.vue'
 import AdminDashboard from '../views/admin/Dashboard.vue'
 
 const routes = [
-    // ====== 管理员路由（必须在通配符前面）======
     {
         path: '/admin/login',
         component: AdminLogin,
@@ -29,7 +28,6 @@ const routes = [
         ]
     },
 
-    // ====== 用户路由 ======
     {
         path: '/login',
         component: UserLogin,

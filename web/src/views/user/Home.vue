@@ -1,11 +1,10 @@
 <template>
     <div class="home">
-        <!-- Hero Banner -->
         <section class="hero">
             <div class="hero-grid-bg"></div>
             <div class="hero-inner">
                 <div class="hero-text">
-                    <div class="hero-eyebrow">企业级 FRPS 节点管理平台</div>
+                    <div class="hero-eyebrow">轻量级 FRPS 节点管理平台</div>
                     <h1>雨梦FRPS<br>业务管理系统</h1>
                     <p>高性能反向代理节点集中管控，多节点智能调度、实时流量监控、安全鉴权分离——让您的 FRPS 基础设施安全、稳定、高效运行</p>
                     <div class="hero-actions">
@@ -40,7 +39,6 @@
             </div>
         </section>
 
-        <!-- 统计条带 -->
         <section class="stats-strip">
             <div class="stats-strip-inner">
                 <div class="stat-item"><div class="val c1">{{ statNodes }}</div><div class="desc">运行节点</div></div>
@@ -50,7 +48,6 @@
             </div>
         </section>
 
-        <!-- 功能特色 -->
         <section class="section" id="features">
             <div class="section-container">
                 <div class="section-header">
@@ -85,14 +82,13 @@
                     </div>
                     <div class="feature-card">
                         <div class="icon-wrap pink">📧</div>
-                        <h3>企业级通知体系</h3>
+                        <h3>轻量级通知体系</h3>
                         <p>SMTP 邮件验证码注册/找回密码，订单状态变更实时通知，到期提醒自动发送</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 热门产品 -->
         <section class="section section-gray" id="products">
             <div class="section-container">
                 <div class="section-header">
@@ -125,12 +121,11 @@
             </div>
         </section>
 
-        <!-- 使用流程 -->
         <section class="section" id="how">
             <div class="section-container">
                 <div class="section-header">
                     <h2>简单四步开始使用</h2>
-                    <p>快速接入 FRPS 节点管理，体验企业级效率提升</p>
+                    <p>快速接入 FRPS 节点管理，体验轻量级效率提升</p>
                 </div>
                 <div class="steps-grid">
                     <div class="step-card">
@@ -157,12 +152,11 @@
             </div>
         </section>
 
-        <!-- CTA -->
         <section class="section">
             <div class="section-container">
                 <div class="cta-block">
                     <h2>准备好管理您的 FRPS 节点了吗？</h2>
-                    <p>立即注册，体验企业级节点管理平台带来的效率提升</p>
+                    <p>立即注册，体验轻量级节点管理平台带来的效率提升</p>
                     <template v-if="userStore.userInfo">
                         <a href="/console" class="btn-cta">进入控制台</a>
                     </template>
@@ -187,7 +181,6 @@ const statProducts = ref('--')
 const products = ref([])
 
 onMounted(async () => {
-    // 加载上架商品数量
     try {
         const res = await getProducts()
         if (res.code === 1) {
@@ -196,7 +189,6 @@ onMounted(async () => {
         }
     } catch (e) { /* ignore */ }
 
-    // 加载节点数量
     try {
         const { getNodes } = await import('../../api/shop')
         const res = await getNodes()
@@ -208,12 +200,7 @@ onMounted(async () => {
 </script>
 
 <style>
-/* ============================================================
-   Global homepage styles — NOT scoped so they override
-   Element Plus body background
-   ============================================================ */
 
-/* ===== Hero Banner: 全宽 ===== */
 .hero {
     position: relative;
     width: 100%;
@@ -320,7 +307,6 @@ onMounted(async () => {
 }
 .btn-hero-ghost:hover { background: rgba(255,255,255,0.22); }
 
-/* 右侧统计卡片 */
 .hero-stats { flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
 .hero-stat-card {
     background: rgba(255,255,255,0.06);
@@ -351,7 +337,6 @@ onMounted(async () => {
     font-weight: 500;
 }
 
-/* 下滑指示 */
 .hero-scroll-hint {
     position: absolute;
     bottom: 24px;
@@ -376,7 +361,6 @@ onMounted(async () => {
     50% { transform: translateX(-50%) translateY(8px); }
 }
 
-/* ===== 统计条带 ===== */
 .stats-strip {
     background: #fff;
     border-bottom: 1px solid #eee;
@@ -403,7 +387,6 @@ onMounted(async () => {
 .stat-item .val.c4 { color: #7b5cff; }
 .stat-item .desc { font-size: 13px; color: #999; margin-top: 6px; }
 
-/* ===== Section 通用 ===== */
 .section { padding: 80px 40px; }
 .section-gray { background: #f8f9fc; }
 .section-header { text-align: center; max-width: 640px; margin: 0 auto 56px; }
@@ -411,7 +394,6 @@ onMounted(async () => {
 .section-header p { font-size: 16px; color: #888; line-height: 1.6; }
 .section-container { max-width: 1200px; margin: 0 auto; }
 
-/* ===== 功能特色卡片 ===== */
 .feature-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -460,7 +442,6 @@ onMounted(async () => {
 .feature-card h3 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0 0 10px 0; }
 .feature-card p  { font-size: 14px; color: #888; line-height: 1.65; margin: 0; }
 
-/* ===== 产品卡片 ===== */
 .product-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -521,7 +502,6 @@ onMounted(async () => {
 .loading-placeholder { text-align: center; padding: 48px; color: #999; width: 100%; }
 .loading-placeholder .l-icon { font-size: 40px; margin-bottom: 12px; }
 
-/* ===== 使用流程 ===== */
 .steps-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -555,7 +535,6 @@ onMounted(async () => {
 .step-card h4 { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: #1a1a1a; }
 .step-card p  { font-size: 13px; color: #888; line-height: 1.6; margin: 0; }
 
-/* ===== CTA ===== */
 .cta-block {
     background: linear-gradient(135deg, #0a1628 0%, #132742 40%, #0d3b6e 100%);
     border-radius: 20px;
@@ -589,7 +568,6 @@ onMounted(async () => {
 }
 .btn-cta:hover { background: #ecf5ff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-/* ===== 响应式 ===== */
 @media (max-width: 1024px) {
     .hero-inner { flex-direction: column; gap: 40px; padding: 60px 24px; }
     .hero-stats { flex-direction: row; width: 100%; justify-content: center; }

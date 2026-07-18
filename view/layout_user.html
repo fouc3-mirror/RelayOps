@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{block name="title"}{$site.site_name ?? '雨梦FRPS业务管理系统'}{/block}</title>
+    <title>{block name="title"}{$site.site_name ?? '雨梦FRPS多节点管理系统'}{/block}</title>
     <link rel="icon" href="{$site.site_favicon ?? '/favicon.ico'}" type="image/x-icon">
     {block name="head"}{/block}
     <style>
@@ -34,7 +34,7 @@
 <body>
     <nav class="nav">
         <div class="nav-logo">
-            <a href="/" class="logo-text"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?>" style="height: 32px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') ?><?php endif; ?></a>
+            <a href="/" class="logo-text"><?php if (!empty($site['site_logo'])): ?><img src="<?= htmlspecialchars($site['site_logo']) ?>" alt="<?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?>" style="height: 32px; vertical-align: middle;"><?php else: ?><?= htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') ?><?php endif; ?></a>
             <div class="nav-links">
                 <a href="/">首页</a>
                 <a href="/about">关于我们</a>
@@ -62,7 +62,7 @@
     </div>
 
     <footer class="footer">
-        <?= !empty($site['site_footer']) ? $site['site_footer'] : 'Copyright &copy; ' . date('Y') . ' ' . htmlspecialchars($site['site_name'] ?? '雨梦FRPS业务管理系统') . '. All rights reserved.' ?>
+        <?= !empty($site['site_footer']) ? $site['site_footer'] : 'Copyright &copy; ' . date('Y') . ' ' . htmlspecialchars($site['site_name'] ?? '雨梦FRPS多节点管理系统') . '. All rights reserved.' ?>
     </footer>
 </body>
 </html>
