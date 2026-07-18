@@ -1,6 +1,7 @@
 # 雨梦FRPS多节点管理系统
 
 FRPS 多节点管理系统，可用于轻商业化用途，基于 ThinkPHP 8 + Vue 3 前后端分离架构。
+此系统请搭配[RelayOps-Frps](https://github.com/fouc3-mirror/Frps-RelayOps)使用
 
 ## 环境要求
 
